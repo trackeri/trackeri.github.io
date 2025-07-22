@@ -1,0 +1,1096 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Klijent Uređaja</title>
+    <style>
+        :root {
+            --background-color: #f0f2f5;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --header-bg: #4CAF50;
+            --header-text: white;
+            --button-bg: #4CAF50;
+            --button-hover-bg: #45a049;
+            --input-bg: white;
+            --input-border: #ccc;
+            --modal-bg: rgba(0, 0, 0, 0.5);
+            --modal-content-bg: white;
+            --form-bg: white;
+            --form-border: #ddd;
+            --danger-color: #f44336;
+            --danger-hover: #d32f2f;
+            --info-color: #2196f3;
+            --info-hover: #1976d2;
+        }
+
+        body.dark-mode {
+            --background-color: #263238;
+            --text-color: #e0e0e0;
+            --border-color: #455a64;
+            --header-bg: #388e3c;
+            --header-text: white;
+            --button-bg: #388e3c;
+            --button-hover-bg: #2e7d32;
+            --input-bg: #37474f;
+            --input-border: #546e7a;
+            --modal-bg: rgba(0, 0, 0, 0.7);
+            --modal-content-bg: #37474f;
+            --form-bg: #37474f;
+            --form-border: #546e7a;
+            --danger-color: #c62828;
+            --danger-hover: #b71c1c;
+            --info-color: #1565c0;
+            --info-hover: #0d47a1;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+            header h1 {
+                margin: 0;
+                font-size: 1.8em;
+            }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .settings-icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--header-text);
+            transition: transform 0.2s ease-in-out;
+        }
+
+            .settings-icon-button:hover {
+                transform: rotate(30deg);
+            }
+
+            .settings-icon-button svg {
+                width: 24px;
+                height: 24px;
+                fill: currentColor;
+            }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: 0.4s;
+                border-radius: 50%;
+            }
+
+        input:checked + .slider {
+            background-color: #2196f3;
+        }
+
+            input:checked + .slider:before {
+                transform: translateX(26px);
+            }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .device-form-container {
+            background-color: var(--form-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid var(--form-border);
+        }
+
+            .device-form-container h2 {
+                margin-top: 0;
+                color: var(--header-bg);
+                text-align: center;
+                margin-bottom: 25px;
+            }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: bold;
+                font-size: 0.95em;
+            }
+
+            .form-group input[type="text"],
+            .form-group input[type="number"],
+            .form-group select {
+                width: calc(100% - 22px);
+                padding: 12px;
+                border: 1px solid var(--input-border);
+                border-radius: 5px;
+                background-color: var(--input-bg);
+                color: var(--text-color);
+                font-size: 1em;
+            }
+
+            .form-group input[readonly] {
+                background-color: #e9e9e9;
+                cursor: not-allowed;
+            }
+
+        body.dark-mode .form-group input[readonly] {
+            background-color: #555;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+            .form-actions button {
+                flex: 1;
+                padding: 12px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 1.1em;
+                transition: background-color 0.2s, transform 0.1s;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+                .form-actions button:hover {
+                    transform: translateY(-2px);
+                }
+
+            .form-actions .start-btn,
+            .form-actions .update-btn {
+                background-color: var(--button-bg);
+                color: white;
+            }
+
+                .form-actions .start-btn:hover,
+                .form-actions .update-btn:hover {
+                    background-color: var(--button-hover-bg);
+                }
+
+            .form-actions .stop-btn {
+                background-color: var(--danger-color);
+                color: white;
+            }
+
+                .form-actions .stop-btn:hover {
+                    background-color: var(--danger-hover);
+                }
+
+            .form-actions .reset-btn {
+                background-color: #ccc;
+                color: #333;
+            }
+
+        body.dark-mode .form-actions .reset-btn {
+            background-color: #555;
+            color: #e0e0e0;
+        }
+
+        .form-actions .reset-btn:hover {
+            background-color: #bbb;
+        }
+
+        body.dark-mode .form-actions .reset-btn:hover {
+            background-color: #666;
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: var(--modal-bg);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--modal-content-bg);
+            margin: auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+            .modal-content h2 {
+                margin-top: 0;
+                color: var(--header-bg);
+            }
+
+            .modal-content textarea {
+                width: calc(100% - 20px);
+                min-height: 150px;
+                padding: 10px;
+                margin-bottom: 20px;
+                border: 1px solid var(--input-border);
+                border-radius: 5px;
+                font-family: monospace;
+                background-color: var(--input-bg);
+                color: var(--text-color);
+                resize: vertical;
+            }
+
+            .modal-content .form-actions {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+                .modal-content .form-actions button {
+                    padding: 10px 25px;
+                    background-color: var(--button-bg);
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 1.1em;
+                    transition: background-color 0.2s;
+                }
+
+                    .modal-content .form-actions button:hover {
+                        background-color: var(--button-hover-bg);
+                    }
+
+        .modal-message .modal-content {
+            max-width: 400px;
+        }
+
+        .modal-confirm .modal-content {
+            max-width: 400px;
+        }
+
+        .modal-confirm .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+            .modal-confirm .modal-buttons button {
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 1em;
+                transition: background-color 0.2s;
+            }
+
+            .modal-confirm .modal-buttons .confirm-btn {
+                background-color: var(--danger-color);
+                color: white;
+                border: none;
+            }
+
+                .modal-confirm .modal-buttons .confirm-btn:hover {
+                    background-color: var(--danger-hover);
+                }
+
+            .modal-confirm .modal-buttons .cancel-btn {
+                background-color: #ccc;
+                color: #333;
+                border: none;
+            }
+
+        body.dark-mode .modal-confirm .modal-buttons .cancel-btn {
+            background-color: #555;
+            color: #e0e0e0;
+        }
+
+        .modal-confirm .modal-buttons .cancel-btn:hover {
+            background-color: #bbb;
+        }
+
+        body.dark-mode .modal-confirm .modal-buttons .cancel-btn:hover {
+            background-color: #666;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none; /* Hidden by default */
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--button-bg);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .form-actions button .loading-spinner {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        .form-actions button:not(.loading) .loading-spinner {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .device-form-container {
+                padding: 20px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 10px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Klijent Uređaja</h1>
+        <div class="header-controls">
+            <button id="settingsBtn" class="settings-icon-button" title="Postavke">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 15.5A3.5 3.5 0 0 0 15.5 12A3.5 3.5 0 0 0 12 8.5A3.5 3.5 0 0 0 8.5 12A3.5 3.5 0 0 0 12 15.5ZM19.4 12.9L21.75 12C21.92 11.59 21.92 11.41 21.75 11L19.4 10.1L18.08 8.07L19.1 5.76L17.24 4.1L14.93 5.13L12.9 3.82L12 1.47C11.59 1.29 11.41 1.29 11 1.47L10.1 3.82L8.07 5.13L5.76 4.1L4.1 5.76L5.13 8.07L3.82 10.1L1.47 11C1.29 11.41 1.29 11.59 1.47 12L3.82 12.9L5.13 14.93L4.1 17.24L5.76 18.9L8.07 17.87L10.1 19.18L11 21.53C11.41 21.71 11.59 21.71 12 21.53L12.9 19.18L14.93 17.87L17.24 18.9L18.9 17.24L17.87 14.93L19.18 12.9H19.4Z" />
+                </svg>
+            </button>
+            <div class="toggle-container">
+                <span>Svijetli / Tamni način</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="device-form-container">
+            <h2 id="formTitle">Registriraj Uređaj</h2>
+            <form id="deviceClientForm">
+                <div class="form-group">
+                    <label for="deviceId">ID Uređaja:</label>
+                    <input type="text" id="deviceId" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="deviceName">Naziv Uređaja:</label>
+                    <input type="text" id="deviceName" placeholder="Unesite naziv uređaja" required />
+                </div>
+                <div class="form-group">
+                    <label for="deviceType">Tip Uređaja:</label>
+                    <select id="deviceType" required>
+                        <option value="">Odaberi tip</option>
+                        <option value="1">Admin</option>
+                        <option value="2">Privatno</option>
+                        <option value="3">Statično</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="deviceBattery">Stanje Baterije (%):</label>
+                    <input type="number" id="deviceBattery" min="0" max="100" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="deviceLat">Latituda:</label>
+                    <input type="number" id="deviceLat" step="any" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="deviceLon">Longituda:</label>
+                    <input type="number" id="deviceLon" step="any" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="deviceStartLat">Početna Latituda:</label>
+                    <input type="number" id="deviceStartLat" step="any" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="deviceStartLon">Početna Longituda:</label>
+                    <input type="number" id="deviceStartLon" step="any" readonly />
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="startStopBtn" class="start-btn">
+                        <span id="buttonText">Pokreni</span>
+                        <div class="loading-spinner" id="spinner"></div>
+                    </button>
+                    <button type="button" id="resetBtn" class="reset-btn">Resetiraj</button>
+                </div>
+            </form>
+            <p id="statusMessage" class="status-message">Čekam unos...</p>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h2>Postavke Klijenta</h2>
+            <p>Molimo unesite svoje API ključeve i naziv tablice u JSON formatu:</p>
+            <textarea id="settingsInput" placeholder='{
+"ApiUrl": "YOUR_SUPABASE_URL",
+"ApiKey": "YOUR_SUPABASE_ANON_KEY",
+"TableName": "your_table_name",
+"ClientId": "optional_unique_client_id"
+}'></textarea>
+            <div class="form-actions">
+                <button type="button" class="cancel-btn" id="cancelSettingsBtn">Odustani</button>
+                <button id="saveSettingsBtn" class="submit-btn">Spremi postavke</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Message Modal -->
+    <div id="messageModal" class="modal modal-message">
+        <div class="modal-content">
+            <h2 id="messageModalTitle"></h2>
+            <p id="messageModalContent"></p>
+            <button id="messageModalCloseBtn">OK</button>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal modal-confirm">
+        <div class="modal-content">
+            <h2 id="confirmModalTitle"></h2>
+            <p id="confirmModalContent"></p>
+            <div class="modal-buttons">
+                <button id="confirmModalCancelBtn" class="cancel-btn">Odustani</button>
+                <button id="confirmModalConfirmBtn" class="confirm-btn">Potvrdi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globalne varijable
+        let config = {};
+        let clientDeviceData = {}; // Podaci o uređaju klijenta, uključujući id, name, startLat, startLon
+        let updateIntervalId = null;
+        const UPDATE_INTERVAL_MS = 10 * 60 * 1000; // 10 minuta u milisekundama
+        const LOCAL_STORAGE_DEVICE_KEY = "clientDeviceData";
+        const LOCAL_STORAGE_CONFIG_KEY = "clientAppConfig";
+        const DARK_MODE_KEY = "darkModeEnabled";
+
+        // DOM elementi
+        const settingsModal = document.getElementById("settingsModal");
+        const settingsInput = document.getElementById("settingsInput");
+        const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+        const settingsBtn = document.getElementById("settingsBtn");
+        const cancelSettingsBtn = document.getElementById("cancelSettingsBtn");
+
+        const deviceClientForm = document.getElementById("deviceClientForm");
+        const formTitle = document.getElementById("formTitle");
+        const deviceIdInput = document.getElementById("deviceId");
+        const deviceNameInput = document.getElementById("deviceName");
+        const deviceTypeInput = document.getElementById("deviceType");
+        const deviceBatteryInput = document.getElementById("deviceBattery");
+        const deviceLatInput = document.getElementById("deviceLat");
+        const deviceLonInput = document.getElementById("deviceLon");
+        const deviceStartLatInput = document.getElementById("deviceStartLat");
+        const deviceStartLonInput = document.getElementById("deviceStartLon");
+        const startStopBtn = document.getElementById("startStopBtn");
+        const buttonText = document.getElementById("buttonText");
+        const spinner = document.getElementById("spinner");
+        const resetBtn = document.getElementById("resetBtn");
+        const statusMessage = document.getElementById("statusMessage");
+
+        const messageModal = document.getElementById("messageModal");
+        const messageModalTitle = document.getElementById("messageModalTitle");
+        const messageModalContent = document.getElementById("messageModalContent");
+        const messageModalCloseBtn = document.getElementById("messageModalCloseBtn");
+
+        const confirmModal = document.getElementById("confirmModal");
+        const confirmModalTitle = document.getElementById("confirmModalTitle");
+        const confirmModalContent = document.getElementById("confirmModalContent");
+        const confirmModalConfirmBtn = document.getElementById("confirmModalConfirmBtn");
+        const confirmModalCancelBtn = document.getElementById("confirmModalCancelBtn");
+        let confirmCallback = null;
+
+        const darkModeToggle = document.getElementById("darkModeToggle");
+
+        // --- Utility funkcije ---
+        function showModal(modalElement) {
+            modalElement.style.display = "flex";
+        }
+
+        function hideModal(modalElement) {
+            modalElement.style.display = "none";
+        }
+
+        function showMessage(title, message) {
+            messageModalTitle.textContent = title;
+            messageModalContent.textContent = message;
+            showModal(messageModal);
+        }
+
+        function showConfirm(title, message, callback) {
+            confirmModalTitle.textContent = title;
+            confirmModalContent.textContent = message;
+            confirmCallback = callback;
+            showModal(confirmModal);
+        }
+
+        function showLoading(button, show) {
+            if (show) {
+                button.classList.add('loading');
+                spinner.style.display = 'inline-block';
+                buttonText.style.display = 'none';
+                button.disabled = true;
+            } else {
+                button.classList.remove('loading');
+                spinner.style.display = 'none';
+                buttonText.style.display = 'inline-block';
+                button.disabled = false;
+            }
+        }
+
+        function applyDarkMode(enabled) {
+            if (enabled) {
+                document.body.classList.add("dark-mode");
+            } else {
+                document.body.classList.remove("dark-mode");
+            }
+            localStorage.setItem(DARK_MODE_KEY, enabled);
+        }
+
+        // --- Konfiguracija ---
+        function loadConfig() {
+            const storedConfig = localStorage.getItem(LOCAL_STORAGE_CONFIG_KEY);
+            if (storedConfig) {
+                try {
+                    config = JSON.parse(storedConfig);
+                } catch (e) {
+                    console.error("Greška pri parsiranju spremljene konfiguracije:", e);
+                    showMessage("Greška konfiguracije", "Spremljena konfiguracija je neispravna. Molimo unesite ponovno.");
+                    config = {};
+                }
+            } else {
+                config = {};
+            }
+
+            // Postavi defaultne vrijednosti ako nedostaju
+            config.ApiUrl = config.ApiUrl || "";
+            config.ApiKey = config.ApiKey || "";
+            config.TableName = config.TableName || "";
+            config.ClientId = config.ClientId || crypto.randomUUID(); // Generiraj ID klijenta ako ne postoji
+
+            // Provjeri kritične ključeve
+            const criticalKeys = ["ApiUrl", "ApiKey", "TableName"];
+            const missingKeys = criticalKeys.filter(key => !config[key]);
+
+            if (missingKeys.length > 0) {
+                showMessage("Greška konfiguracije", `Nedostaju obavezni konfiguracijski ključevi: ${missingKeys.join(", ")}`);
+                return false;
+            }
+            return true;
+        }
+
+        function saveConfig(cfg) {
+            localStorage.setItem(LOCAL_STORAGE_CONFIG_KEY, JSON.stringify(cfg));
+            config = cfg;
+            hideModal(settingsModal);
+        }
+
+        function showConfigModal() {
+            settingsInput.value = JSON.stringify({
+                ApiUrl: config.ApiUrl || "",
+                ApiKey: config.ApiKey || "",
+                TableName: config.TableName || "",
+                ClientId: config.ClientId || "", // Prikazati postojeći ClientId
+            }, null, 2);
+            showModal(settingsModal);
+        }
+
+        // --- Podaci o uređaju (klijentu) ---
+        function loadClientDeviceData() {
+            const storedData = localStorage.getItem(LOCAL_STORAGE_DEVICE_KEY);
+            if (storedData) {
+                try {
+                    clientDeviceData = JSON.parse(storedData);
+                    console.log("Učitani podaci o uređaju iz LocalStorage-a:", clientDeviceData);
+                } catch (e) {
+                    console.error("Greška pri parsiranju podataka o uređaju iz LocalStorage-a:", e);
+                    showMessage("Greška podataka", "Spremljeni podaci o uređaju su neispravni. Molimo resetirajte.");
+                    clientDeviceData = {};
+                }
+            } else {
+                clientDeviceData = {};
+            }
+        }
+
+        function saveClientDeviceData() {
+            localStorage.setItem(LOCAL_STORAGE_DEVICE_KEY, JSON.stringify(clientDeviceData));
+            console.log("Spremljeni podaci o uređaju u LocalStorage:", clientDeviceData);
+        }
+
+        function clearClientDeviceData() {
+            localStorage.removeItem(LOCAL_STORAGE_DEVICE_KEY);
+            clientDeviceData = {};
+            resetFormAndUI();
+            stopSendingData();
+            showMessage("Resetirano", "Podaci o uređaju su obrisani i aplikacija je resetirana.");
+        }
+
+        // --- Geolocation i baterija ---
+        async function getGeolocationAndBattery() {
+            statusMessage.textContent = "Dohvaćanje lokacije i stanja baterije...";
+            let lat = null;
+            let lon = null;
+            let battery = null;
+
+            // Geolocation
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0,
+                    });
+                });
+                lat = position.coords.latitude;
+                lon = position.coords.longitude;
+                deviceLatInput.value = lat.toFixed(6);
+                deviceLonInput.value = lon.toFixed(6);
+                statusMessage.textContent = `Lokacija: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)}`;
+            } catch (error) {
+                let geoErrorMsg = "Nije moguće dohvatiti lokaciju.";
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        geoErrorMsg = "Dopuštenje za geolokaciju je odbijeno.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        geoErrorMsg = "Informacije o lokaciji nisu dostupne.";
+                        break;
+                    case error.TIMEOUT:
+                        geoErrorMsg = "Isteklo je vrijeme za dohvatanje lokacije.";
+                        break;
+                }
+                console.error("Greška geolokacije:", error);
+                statusMessage.textContent = `Greška geolokacije: ${geoErrorMsg}`;
+                showMessage("Greška geolokacije", geoErrorMsg + " Molimo omogućite pristup lokaciji.");
+            }
+
+            // Battery
+            if ('getBattery' in navigator) {
+                try {
+                    const batteryManager = await navigator.getBattery();
+                    battery = Math.round(batteryManager.level * 100);
+                    deviceBatteryInput.value = battery;
+                    statusMessage.textContent += `, Baterija: ${battery}%`;
+                } catch (error) {
+                    console.error("Greška pri dohvatu stanja baterije:", error);
+                    statusMessage.textContent += ", Greška baterije.";
+                    showMessage("Greška baterije", "Nije moguće dohvatiti stanje baterije.");
+                }
+            } else {
+                statusMessage.textContent += ", Baterija: Nije podržano.";
+            }
+
+            return { lat, lon, battery };
+        }
+
+        // --- Supabase API pozivi ---
+        async function callSupabaseApi(method, body = null, id = null) {
+            const { ApiUrl, ApiKey, TableName } = config;
+            if (!ApiUrl || !ApiKey || !TableName) {
+                showMessage("Greška konfiguracije", "Supabase URL, ključ ili naziv tablice nedostaju. Molimo provjerite konfiguraciju.");
+                return null;
+            }
+
+            let url = `${ApiUrl}/rest/v1/${TableName}`;
+            if (id) {
+                url += `?id=eq.${id}`;
+            } else if (method === 'GET') {
+                url += `?select=id,data,lastUpdate`;
+            }
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'apikey': ApiKey,
+                'Authorization': `Bearer ${ApiKey}`
+            };
+
+            if (method === 'POST' || method === 'PATCH') {
+                headers['Prefer'] = 'return=representation';
+            }
+
+            try {
+                console.log(`Slanje API zahtjeva: ${method} ${url}`);
+                const res = await fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: body ? JSON.stringify(body) : undefined,
+                });
+
+                const responseText = await res.text();
+                const hasContent = responseText.trim().length > 0;
+                const contentType = res.headers.get('content-type');
+                const isJson = contentType && contentType.includes('application/json');
+
+                if (!res.ok) {
+                    let errorMessage = `Supabase API greška (${res.status})`;
+                    if (hasContent) {
+                        try {
+                            const errorJson = JSON.parse(responseText);
+                            errorMessage += `: ${JSON.stringify(errorJson)}`;
+                        } catch (e) {
+                            errorMessage += `: ${responseText}`;
+                        }
+                    } else {
+                        errorMessage += `: Nema tijela odgovora`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                if (res.status === 204) {
+                    return true;
+                } else if (hasContent && isJson) {
+                    return JSON.parse(responseText);
+                } else if (res.ok && !hasContent) {
+                    return true;
+                } else {
+                    return responseText;
+                }
+
+            } catch (error) {
+                console.error(`Greška tijekom Supabase API ${method} poziva na ${url}:`, error.message);
+                showMessage("API Greška", `Došlo je do greške prilikom komunikacije sa Supabase: ${error.message}`);
+                return null;
+            }
+        }
+
+        async function registerDevice() {
+            showLoading(startStopBtn, true);
+            const { lat, lon, battery } = await getGeolocationAndBattery();
+
+            if (lat === null || lon === null) {
+                showMessage("Greška", "Nije moguće registrirati uređaj bez lokacije.");
+                showLoading(startStopBtn, false);
+                return;
+            }
+
+            const deviceName = deviceNameInput.value.trim();
+            const deviceType = parseInt(deviceTypeInput.value);
+
+            if (!deviceName || !deviceType) {
+                showMessage("Greška unosa", "Naziv i tip uređaja su obavezni.");
+                showLoading(startStopBtn, false);
+                return;
+            }
+
+            // Generiraj novi ID za uređaj
+            const newDeviceId = config.ClientId; // Koristi ClientId iz konfiguracije kao ID uređaja
+            const startLat = lat;
+            const startLon = lon;
+
+            const devicePayload = {
+                id: newDeviceId,
+                name: deviceName,
+                type: deviceType,
+                battery: battery,
+                lat: lat,
+                lon: lon,
+                startLat: startLat,
+                startLon: startLon,
+                lastUpdate: new Date().toISOString()
+            };
+
+            try {
+                const result = await callSupabaseApi('POST', { data: devicePayload });
+                if (result) {
+                    clientDeviceData = {
+                        id: newDeviceId,
+                        name: deviceName,
+                        type: deviceType, // Spremi i tip
+                        startLat: startLat,
+                        startLon: startLon
+                    };
+                    saveClientDeviceData();
+                    showMessage("Uspjeh", "Uređaj uspješno registriran!");
+                    updateUIForRegisteredDevice();
+                    startSendingData();
+                }
+            } catch (error) {
+                console.error("Greška pri registraciji uređaja:", error);
+                showMessage("Greška", "Nije moguće registrirati uređaj. Provjerite konzolu za detalje.");
+            } finally {
+                showLoading(startStopBtn, false);
+            }
+        }
+
+        async function sendDeviceUpdate() {
+            console.log("Slanje ažuriranja podataka o uređaju...");
+            statusMessage.textContent = "Slanje ažuriranja podataka...";
+            const { lat, lon, battery } = await getGeolocationAndBattery();
+
+            if (lat === null || lon === null) {
+                console.warn("Nije moguće poslati ažuriranje bez lokacije.");
+                statusMessage.textContent = "Ažuriranje preskočeno: Nema lokacije.";
+                return;
+            }
+
+            if (!clientDeviceData.id) {
+                console.error("Nema ID-a uređaja za slanje ažuriranja.");
+                statusMessage.textContent = "Greška: Nema ID-a uređaja za ažuriranje.";
+                stopSendingData();
+                return;
+            }
+
+            const updatePayload = {
+                battery: battery,
+                lat: lat,
+                lon: lon,
+                lastUpdate: new Date().toISOString()
+            };
+
+            // Uključi name, startLat, startLon samo ako su se promijenili ili ako ih nema u bazi
+            // Za PATCH request, šaljemo samo polja koja želimo ažurirati.
+            // Name, startLat, startLon se ne mijenjaju nakon prve registracije.
+            // Supabase će automatski ignorirati polja koja nisu definirana u tablici ili koja se ne smiju mijenjati.
+
+            try {
+                const result = await callSupabaseApi('PATCH', { data: updatePayload }, clientDeviceData.id);
+                if (result) {
+                    statusMessage.textContent = `Podaci uspješno ažurirani! Zadnje: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)}, Baterija ${battery}%`;
+                }
+            } catch (error) {
+                console.error("Greška pri slanju ažuriranja:", error);
+                statusMessage.textContent = "Greška pri slanju ažuriranja. Provjerite konzolu.";
+            }
+        }
+
+        function startSendingData() {
+            if (updateIntervalId) {
+                clearInterval(updateIntervalId);
+            }
+            updateIntervalId = setInterval(sendDeviceUpdate, UPDATE_INTERVAL_MS);
+            buttonText.textContent = "Zaustavi slanje";
+            startStopBtn.classList.remove("start-btn");
+            startStopBtn.classList.add("stop-btn");
+            statusMessage.textContent = `Slanje podataka aktivno. Ažurira se svakih ${UPDATE_INTERVAL_MS / 1000 / 60} minuta.`;
+            console.log(`Slanje podataka aktivno. Ažurira se svakih ${UPDATE_INTERVAL_MS / 1000 / 60} minuta.`);
+        }
+
+        function stopSendingData() {
+            if (updateIntervalId) {
+                clearInterval(updateIntervalId);
+                updateIntervalId = null;
+            }
+            buttonText.textContent = "Pokreni slanje";
+            startStopBtn.classList.remove("stop-btn");
+            startStopBtn.classList.add("start-btn");
+            statusMessage.textContent = "Slanje podataka zaustavljeno.";
+            console.log("Slanje podataka zaustavljeno.");
+        }
+
+        // --- UI Ažuriranja ---
+        function updateUIForInitialSetup() {
+            formTitle.textContent = "Registriraj Uređaj";
+            deviceIdInput.value = config.ClientId || "N/A";
+            deviceNameInput.readOnly = false;
+            deviceTypeInput.disabled = false;
+            startStopBtn.type = "submit";
+            buttonText.textContent = "Registriraj";
+            startStopBtn.classList.remove("stop-btn");
+            startStopBtn.classList.add("start-btn");
+            resetBtn.style.display = 'none'; // Sakrij reset gumb dok se ne registrira
+            statusMessage.textContent = "Spreman za registraciju novog uređaja.";
+        }
+
+        function updateUIForRegisteredDevice() {
+            formTitle.textContent = `Uređaj Registriran (ID: ${clientDeviceData.id})`;
+            deviceIdInput.value = clientDeviceData.id;
+            deviceNameInput.value = clientDeviceData.name || '';
+            deviceTypeInput.value = clientDeviceData.type || '';
+            deviceStartLatInput.value = (typeof clientDeviceData.startLat === 'number' && !isNaN(clientDeviceData.startLat)) ? clientDeviceData.startLat.toFixed(6) : 'N/A';
+            deviceStartLonInput.value = (typeof clientDeviceData.startLon === 'number' && !isNaN(clientDeviceData.startLon)) ? clientDeviceData.startLon.toFixed(6) : 'N/A';
+
+            deviceNameInput.readOnly = true; // Naziv i tip se ne mijenjaju nakon prve registracije
+            deviceTypeInput.disabled = true;
+            startStopBtn.type = "button"; // Promijeni u button da ne submituje formu
+            resetBtn.style.display = 'inline-block'; // Prikaži reset gumb
+            startSendingData(); // Automatski pokreni slanje podataka
+        }
+
+        function resetFormAndUI() {
+            deviceClientForm.reset();
+            clientDeviceData = {};
+            localStorage.removeItem(LOCAL_STORAGE_DEVICE_KEY);
+            updateUIForInitialSetup();
+            getGeolocationAndBattery(); // Ponovno dohvati lokaciju i bateriju za praznu formu
+            stopSendingData();
+        }
+
+        // --- Event Listeneri ---
+        saveSettingsBtn.addEventListener("click", () => {
+            try {
+                const currentSettings = JSON.parse(settingsInput.value);
+                // Validacija obaveznih polja
+                if (!currentSettings.ApiUrl || !currentSettings.ApiKey || !currentSettings.TableName) {
+                    showMessage("Greška konfiguracije", "ApiUrl, ApiKey i TableName su obavezni.");
+                    return;
+                }
+                saveConfig(currentSettings);
+                // Nakon spremanja postavki, ponovno provjeri stanje uređaja
+                initClient();
+            } catch (e) {
+                showMessage("Greška konfiguracije", "Neispravan JSON format za konfiguraciju. Molimo provjerite svoj unos.");
+            }
+        });
+
+        settingsBtn.addEventListener("click", showConfigModal);
+        cancelSettingsBtn.addEventListener("click", () => {
+            hideModal(settingsModal);
+        });
+
+        messageModalCloseBtn.addEventListener("click", () => {
+            hideModal(messageModal);
+        });
+
+        confirmModalConfirmBtn.addEventListener("click", () => {
+            hideModal(confirmModal);
+            if (confirmCallback) {
+                confirmCallback(true);
+                confirmCallback = null;
+            }
+        });
+
+        confirmModalCancelBtn.addEventListener("click", () => {
+            hideModal(confirmModal);
+            if (confirmCallback) {
+                confirmCallback(false);
+                confirmCallback = null;
+            }
+        });
+
+        deviceClientForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!clientDeviceData.id) {
+                await registerDevice();
+            } else {
+                // Ako je već registriran, ovaj gumb služi za pokretanje/zaustavljanje
+                if (updateIntervalId) {
+                    stopSendingData();
+                } else {
+                    startSendingData();
+                }
+            }
+        });
+
+        resetBtn.addEventListener("click", () => {
+            showConfirm("Potvrda resetiranja", "Jeste li sigurni da želite resetirati uređaj? Svi spremljeni podaci će biti obrisani.", (confirmed) => {
+                if (confirmed) {
+                    clearClientDeviceData();
+                }
+            });
+        });
+
+        darkModeToggle.addEventListener("change", (e) => {
+            applyDarkMode(e.target.checked);
+        });
+
+        // --- Inicijalizacija klijenta ---
+        async function initClient() {
+            if (!loadConfig()) {
+                showConfigModal();
+                return;
+            }
+            loadClientDeviceData();
+            await getGeolocationAndBattery(); // Dohvati početnu lokaciju i bateriju
+
+            if (clientDeviceData.id) {
+                updateUIForRegisteredDevice();
+            } else {
+                updateUIForInitialSetup();
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", initClient);
+    </script>
+</body>
+</html>
