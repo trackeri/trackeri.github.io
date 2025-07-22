@@ -459,8 +459,12 @@
             <h2 id="formTitle">Registriraj Uređaj</h2>
             <form id="deviceClientForm">
                 <div class="form-group">
-                    <label for="deviceId">ID Uređaja:</label>
+                    <label for="deviceId">ID Uređaja (iz baze):</label>
                     <input type="text" id="deviceId" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="clientGuidDisplay">Client GUID (iz postavki):</label>
+                    <input type="text" id="clientGuidDisplay" readonly />
                 </div>
                 <div class="form-group">
                     <label for="deviceName">Naziv Uređaja:</label>
@@ -511,7 +515,7 @@
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <h2>Postavke Klijenta</h2>
-            <p>Molimo unesite svoje API ključeve i naziv tablice u JSON formatu:</p>
+            <p id="settingsMessage">Molimo unesite svoje API ključeve i naziv tablice u JSON formatu. Ovo je potrebno za prvu konfiguraciju ili ako su postavke nevažeće.</p>
             <textarea id="settingsInput" placeholder='{
 "ApiUrl": "YOUR_SUPABASE_URL",
 "ApiKey": "YOUR_SUPABASE_ANON_KEY",
@@ -549,7 +553,7 @@
     <script>
         // Globalne varijable
         let config = {};
-        let clientDeviceData = {}; // Podaci o uređaju klijenta, uključujući id, name, startLat, startLon
+        let clientDeviceData = {}; // Podaci o uređaju klijenta: dbId (int), clientGuid (GUID), name, type, startLat, startLon
         let updateIntervalId = null;
         const UPDATE_INTERVAL_MS = 10 * 60 * 1000; // 10 minuta u milisekundama
         const LOCAL_STORAGE_DEVICE_KEY = "clientDeviceData";
@@ -562,10 +566,12 @@
         const saveSettingsBtn = document.getElementById("saveSettingsBtn");
         const settingsBtn = document.getElementById("settingsBtn");
         const cancelSettingsBtn = document.getElementById("cancelSettingsBtn");
+        const settingsMessage = document.getElementById("settingsMessage"); // Novo: poruka unutar settings modala
 
         const deviceClientForm = document.getElementById("deviceClientForm");
         const formTitle = document.getElementById("formTitle");
         const deviceIdInput = document.getElementById("deviceId");
+        const clientGuidDisplay = document.getElementById("clientGuidDisplay"); // Novo polje za prikaz Client GUID-a
         const deviceNameInput = document.getElementById("deviceName");
         const deviceTypeInput = document.getElementById("deviceType");
         const deviceBatteryInput = document.getElementById("deviceBattery");
@@ -646,8 +652,8 @@
                     config = JSON.parse(storedConfig);
                 } catch (e) {
                     console.error("Greška pri parsiranju spremljene konfiguracije:", e);
-                    showMessage("Greška konfiguracije", "Spremljena konfiguracija je neispravna. Molimo unesite ponovno.");
-                    config = {};
+                    config = {}; // Reset config to empty if parsing fails
+                    return false; // Indicate failure
                 }
             } else {
                 config = {};
@@ -664,25 +670,38 @@
             const missingKeys = criticalKeys.filter(key => !config[key]);
 
             if (missingKeys.length > 0) {
-                showMessage("Greška konfiguracije", `Nedostaju obavezni konfiguracijski ključevi: ${missingKeys.join(", ")}`);
-                return false;
+                console.warn("Nedostaju obavezni konfiguracijski ključevi:", missingKeys.join(", "));
+                return false; // Indicate failure
             }
             return true;
         }
 
         function saveConfig(cfg) {
+            // Normalize ApiUrl: ensure https:// and no trailing slash
+            if (cfg.ApiUrl) {
+                let url = cfg.ApiUrl;
+                if (!url.startsWith('https://') && !url.startsWith('http://')) {
+                    url = 'https://' + url; // Assume https if no protocol
+                }
+                if (url.endsWith('/')) {
+                    url = url.slice(0, -1); // Remove trailing slash
+                }
+                cfg.ApiUrl = url;
+            }
+
             localStorage.setItem(LOCAL_STORAGE_CONFIG_KEY, JSON.stringify(cfg));
             config = cfg;
             hideModal(settingsModal);
         }
 
-        function showConfigModal() {
+        function showConfigModal(message = "Molimo unesite svoje API ključeve i naziv tablice u JSON formatu. Ovo je potrebno za prvu konfiguraciju ili ako su postavke nevažeće.") {
             settingsInput.value = JSON.stringify({
                 ApiUrl: config.ApiUrl || "",
                 ApiKey: config.ApiKey || "",
                 TableName: config.TableName || "",
                 ClientId: config.ClientId || "", // Prikazati postojeći ClientId
             }, null, 2);
+            settingsMessage.textContent = message; // Postavi poruku u modalu
             showModal(settingsModal);
         }
 
@@ -778,6 +797,7 @@
         async function callSupabaseApi(method, body = null, id = null) {
             const { ApiUrl, ApiKey, TableName } = config;
             if (!ApiUrl || !ApiKey || !TableName) {
+                // Ova poruka se sada prikazuje samo ako konfiguracija nestane usred rada, ne na početku
                 showMessage("Greška konfiguracije", "Supabase URL, ključ ili naziv tablice nedostaju. Molimo provjerite konfiguraciju.");
                 return null;
             }
@@ -785,8 +805,6 @@
             let url = `${ApiUrl}/rest/v1/${TableName}`;
             if (id) {
                 url += `?id=eq.${id}`;
-            } else if (method === 'GET') {
-                url += `?select=id,data,lastUpdate`;
             }
 
             const headers = {
@@ -863,37 +881,44 @@
                 return;
             }
 
-            // Generiraj novi ID za uređaj
-            const newDeviceId = config.ClientId; // Koristi ClientId iz konfiguracije kao ID uređaja
+            // Client GUID iz konfiguracije
+            const currentClientGuid = config.ClientId;
             const startLat = lat;
             const startLon = lon;
 
+            // Payload za POST zahtjev (id se ne šalje, baza će ga generirati)
             const devicePayload = {
-                id: newDeviceId,
-                name: deviceName,
-                type: deviceType,
-                battery: battery,
-                lat: lat,
-                lon: lon,
-                startLat: startLat,
-                startLon: startLon,
+                data: { // Svi podaci idu unutar 'data' JSONB polja
+                    name: deviceName,
+                    type: deviceType,
+                    battery: battery,
+                    lat: lat,
+                    lon: lon,
+                    startLat: startLat,
+                    startLon: startLon,
+                    clientGuid: currentClientGuid // Spremi Client GUID unutar data objekta
+                },
                 lastUpdate: new Date().toISOString()
             };
 
             try {
-                const result = await callSupabaseApi('POST', { data: devicePayload });
-                if (result) {
+                const result = await callSupabaseApi('POST', devicePayload);
+                if (result && result.length > 0) {
+                    const newDbId = result[0].id; // Dohvati generirani ID iz baze
                     clientDeviceData = {
-                        id: newDeviceId,
+                        dbId: newDbId,
+                        clientGuid: currentClientGuid,
                         name: deviceName,
-                        type: deviceType, // Spremi i tip
+                        type: deviceType,
                         startLat: startLat,
                         startLon: startLon
                     };
                     saveClientDeviceData();
-                    showMessage("Uspjeh", "Uređaj uspješno registriran!");
+                    showMessage("Uspjeh", `Uređaj uspješno registriran! ID iz baze: ${newDbId}`);
                     updateUIForRegisteredDevice();
                     startSendingData();
+                } else {
+                    throw new Error("Nije primljen očekivani odgovor nakon registracije.");
                 }
             } catch (error) {
                 console.error("Greška pri registraciji uređaja:", error);
@@ -914,28 +939,27 @@
                 return;
             }
 
-            if (!clientDeviceData.id) {
-                console.error("Nema ID-a uređaja za slanje ažuriranja.");
+            if (!clientDeviceData.dbId) {
+                console.error("Nema ID-a uređaja iz baze za slanje ažuriranja.");
                 statusMessage.textContent = "Greška: Nema ID-a uređaja za ažuriranje.";
                 stopSendingData();
                 return;
             }
 
+            // Payload za PATCH zahtjev
             const updatePayload = {
-                battery: battery,
-                lat: lat,
-                lon: lon,
-                lastUpdate: new Date().toISOString()
+                data: { // Ažurira se samo dio unutar 'data' JSONB polja
+                    battery: battery,
+                    lat: lat,
+                    lon: lon
+                },
+                lastUpdate: new Date().toISOString() // Ažuriraj lastUpdate na top-levelu
             };
 
-            // Uključi name, startLat, startLon samo ako su se promijenili ili ako ih nema u bazi
-            // Za PATCH request, šaljemo samo polja koja želimo ažurirati.
-            // Name, startLat, startLon se ne mijenjaju nakon prve registracije.
-            // Supabase će automatski ignorirati polja koja nisu definirana u tablici ili koja se ne smiju mijenjati.
-
             try {
-                const result = await callSupabaseApi('PATCH', { data: updatePayload }, clientDeviceData.id);
-                if (result) {
+                // Koristi dbId za PATCH zahtjev
+                const result = await callSupabaseApi('PATCH', updatePayload, clientDeviceData.dbId);
+                if (result) { // result će biti true ako je 204 No Content ili će vratiti reprezentaciju
                     statusMessage.textContent = `Podaci uspješno ažurirani! Zadnje: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)}, Baterija ${battery}%`;
                 }
             } catch (error) {
@@ -971,7 +995,8 @@
         // --- UI Ažuriranja ---
         function updateUIForInitialSetup() {
             formTitle.textContent = "Registriraj Uređaj";
-            deviceIdInput.value = config.ClientId || "N/A";
+            deviceIdInput.value = "Nije registriran"; // Prikazuje da ID iz baze još ne postoji
+            clientGuidDisplay.value = config.ClientId || "N/A"; // Prikazuje Client GUID
             deviceNameInput.readOnly = false;
             deviceTypeInput.disabled = false;
             startStopBtn.type = "submit";
@@ -983,8 +1008,9 @@
         }
 
         function updateUIForRegisteredDevice() {
-            formTitle.textContent = `Uređaj Registriran (ID: ${clientDeviceData.id})`;
-            deviceIdInput.value = clientDeviceData.id;
+            formTitle.textContent = `Uređaj Registriran (ID iz baze: ${clientDeviceData.dbId})`;
+            deviceIdInput.value = clientDeviceData.dbId; // Prikazuje ID iz baze
+            clientGuidDisplay.value = clientDeviceData.clientGuid || "N/A"; // Prikazuje Client GUID
             deviceNameInput.value = clientDeviceData.name || '';
             deviceTypeInput.value = clientDeviceData.type || '';
             deviceStartLatInput.value = (typeof clientDeviceData.startLat === 'number' && !isNaN(clientDeviceData.startLat)) ? clientDeviceData.startLat.toFixed(6) : 'N/A';
@@ -1012,14 +1038,14 @@
                 const currentSettings = JSON.parse(settingsInput.value);
                 // Validacija obaveznih polja
                 if (!currentSettings.ApiUrl || !currentSettings.ApiKey || !currentSettings.TableName) {
-                    showMessage("Greška konfiguracije", "ApiUrl, ApiKey i TableName su obavezni.");
+                    showConfigModal("ApiUrl, ApiKey i TableName su obavezni. Molimo popunite sva polja."); // Ažurirana poruka
                     return;
                 }
                 saveConfig(currentSettings);
                 // Nakon spremanja postavki, ponovno provjeri stanje uređaja
                 initClient();
             } catch (e) {
-                showMessage("Greška konfiguracije", "Neispravan JSON format za konfiguraciju. Molimo provjerite svoj unos.");
+                showConfigModal("Neispravan JSON format za konfiguraciju. Molimo provjerite svoj unos."); // Ažurirana poruka
             }
         });
 
@@ -1050,7 +1076,7 @@
 
         deviceClientForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!clientDeviceData.id) {
+            if (!clientDeviceData.dbId) { // Provjeri da li postoji dbId
                 await registerDevice();
             } else {
                 // Ako je već registriran, ovaj gumb služi za pokretanje/zaustavljanje
@@ -1077,13 +1103,14 @@
         // --- Inicijalizacija klijenta ---
         async function initClient() {
             if (!loadConfig()) {
+                // Pozovi showConfigModal direktno, bez showMessage
                 showConfigModal();
                 return;
             }
             loadClientDeviceData();
             await getGeolocationAndBattery(); // Dohvati početnu lokaciju i bateriju
 
-            if (clientDeviceData.id) {
+            if (clientDeviceData.dbId) { // Provjeri da li postoji dbId
                 updateUIForRegisteredDevice();
             } else {
                 updateUIForInitialSetup();
