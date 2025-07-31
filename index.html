@@ -9,6 +9,7 @@
         :root {
             --main-bg: #f4f6fb;
             --card-bg: #fff;
+            --filter-card-bg: rgba(0,0,0,0.07);
             --primary: #1976d2;
             --success: #43a047;
             --danger: #e53935;
@@ -63,7 +64,7 @@
             cursor: pointer;
             background: rgba(255,255,255,0.07);
             border-radius: .7em;
-            padding: .18em .6em;
+            padding: .3em .7em; /* Podešen padding */
             transition: background 0.2s, color 0.2s;
         }
 
@@ -73,15 +74,78 @@
             }
 
             .settings-btn i, .refresh-btn i { /* Dodan .refresh-btn */
-                font-size: 1.1em;
+                font-size: 1.2em; /* Povećana ikona */
             }
 
-        .settings-label {
-            font-size: 1em;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            margin-left: 0.2em;
+        /* Filteri Switch Styles */
+        .filter-switch-container {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0 0.5rem;
         }
+
+        .filter-switch-label {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.3);
+            transition: .4s;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .4s;
+            }
+
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--success);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .slider.round {
+            border-radius: 24px;
+        }
+
+            .slider.round:before {
+                border-radius: 50%;
+            }
 
         /* Status Icon Styles */
         .status-icon {
@@ -158,7 +222,7 @@
             padding: 1.2rem 1rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 0.rem;
             border: 1px solid var(--border);
             position: relative;
             transition: box-shadow .2s, border-color .2s;
@@ -230,6 +294,7 @@
             display: flex;
             align-items: center;
             gap: .4rem;
+            justify-content: space-between; /* Added to push distance to the right */
         }
 
         .map-panel {
@@ -252,10 +317,10 @@
             height: 100%;
             min-height: 400px;
         }
-        /* Tabs for mobile */
+        /* Tabs for mobile and tablet */
         .tabs {
-            display: none;
             margin-bottom: 1rem;
+            display: none; /* Hidden by default, shown by JS on smaller screens */
         }
 
         .tab-btn {
@@ -276,18 +341,36 @@
                 color: #fff;
             }
 
+        /* Filter panels - controlled by JS, but default states for larger screens */
+        .filter-panel { /* This applies to #filter-panel (desktop version) */
+            display: grid; /* Default for desktop, overridden by JS for smaller screens */
+        }
+
+            .filter-panel#filter-panel-mobile { /* This applies to #filter-panel-mobile */
+                display: none; /* Hidden by default, shown by JS on mobile */
+            }
+
         @media (max-width: 900px) {
+            /* REMOVED: .filter-switch-container { display: none; } */
             .main-content {
                 flex-direction: column;
                 gap: 1.2rem;
                 min-height: unset;
             }
 
-            .map-panel, .devices-panel {
+            .tabs { /* Show tabs for tablet */
+                display: flex;
+                width: 100%;
+            }
+
+            .devices-panel, .map-panel {
                 min-width: 0;
                 max-width: 100vw;
                 width: 100%;
                 height: 350px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                border: 1px solid var(--border);
             }
 
             .map-panel {
@@ -319,10 +402,6 @@
                 padding: .2em .6em;
             }
 
-            .settings-label {
-                font-size: .95em;
-            }
-
             .status-icon {
                 width: 20px;
                 height: 20px;
@@ -337,15 +416,7 @@
                 padding: 0;
             }
 
-            .tabs {
-                display: flex;
-                width: 100%;
-            }
-
             .devices-panel, .map-panel {
-                max-width: 100vw;
-                width: 100%;
-                min-width: 0;
                 border-radius: 0;
                 box-shadow: none;
                 border: none;
@@ -383,7 +454,7 @@
 
         /* Novi stilovi za filter panel */
         .filter-panel {
-            background: var(--card-bg);
+            background: var(--filter-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
@@ -392,18 +463,19 @@
             display: grid; /* Promijenjeno u grid */
             grid-template-columns: repeat(2, 1fr); /* 2 kolone za desktop */
             grid-auto-rows: minmax(auto, auto); /* Automatska visina redova */
-            gap: 1.1rem 2rem; /* Povećan razmak između stupaca */
+            gap: 0.4rem 1rem; /* Povećan razmak između stupaca */
         }
 
         .filter-item {
-            display: flex;
-            align-items: center;
+            display: flex; /* Koristi flexbox za poravnanje */
+            align-items: center; /* Poravnaj elemente vertikalno po sredini */
             gap: 0.4em;
         }
 
             .filter-item label {
                 font-weight: 500;
                 white-space: nowrap; /* Spriječava prelamanje teksta labela */
+                min-width: 80px; /* Dodana minimalna širina za labele radi poravnanja */
             }
 
             .filter-item select,
@@ -518,10 +590,11 @@
                     align-items: center;
                     gap: 4px;
                     white-space: nowrap;
+                    color: var(--muted); /* Labels in gray */
                 }
 
                 .info-window-details .prop-grid .value {
-                    font-weight: 500;
+                    /* font-weight: bold; */ /* Uklonjen bold */
                 }
 
             .info-window-details .location-info {
@@ -529,7 +602,12 @@
                 display: flex;
                 align-items: center;
                 gap: 4px;
+                color: var(--muted); /* Labels in gray */
             }
+
+                .info-window-details .location-info b {
+                    color: var(--muted); /* Labels in gray */
+                }
 
                 .info-window-details .location-info i {
                     font-size: 1.05em;
@@ -545,7 +623,13 @@
                 display: flex;
                 align-items: center;
                 gap: 4px;
+                color: var(--muted); /* Labels in gray */
             }
+
+                .info-window-details .last-update-info b {
+                    color: var(--muted); /* Labels in gray */
+                }
+
 
                 .info-window-details .last-update-info.red {
                     color: var(--danger);
@@ -581,9 +665,16 @@
             <span id="statusIcon" class="status-icon" style="display:none;">
                 <!-- Ikona će biti umetnuta ovdje putem JS-a -->
             </span>
+            <!-- Filteri Switch -->
+            <div class="filter-switch-container">
+                <label for="filter-toggle" class="filter-switch-label">Filteri</label>
+                <label class="switch">
+                    <input type="checkbox" id="filter-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
             <span id="settingsBtn" class="settings-btn" title="Postavke">
                 <i class="fa-solid fa-gear"></i>
-                <span class="settings-label">Postavke</span>
             </span>
         </div>
     </header>
@@ -649,55 +740,55 @@
             const updateOpts = ["", ">5", ">10", ">15", ">17", ">18", ">19", ">25", ">30", ">35", ">40", ">55"];
             const panel = document.getElementById(panelId);
             panel.innerHTML = `
-                        <div class="filter-item">
-                            <label for="filter-battery">Baterija:</label>
-                            <select id="filter-battery">${batteryOpts.map(o => `<option value="${o}"${filters.battery === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="filter-health">Zdravlje:</label>
-                            <select id="filter-health">
-                                <option value="">Sve</option>
-                                <option value="GOOD"${filters.health === "GOOD" ? " selected" : ""}>GOOD</option>
-                                <option value="NOTGOOD"${filters.health === "NOTGOOD" ? " selected" : ""}>NOT GOOD</option>
-                                <option value="NONE"${filters.health === "NONE" ? " selected" : ""}>NONE</option>
-                                <option value="UNKNOWN"${filters.health === "UNKNOWN" ? " selected" : ""}>UNKNOWN</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="filter-temp">Temp:</label>
-                            <select id="filter-temp">${tempOpts.map(o => `<option value="${o}"${filters.temp === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="filter-charger">Punjač:</label>
-                            <select id="filter-charger">
-                                <option value="">Sve</option>
-                                <option value="AC"${filters.charger === "AC" ? " selected" : ""}>AC</option>
-                                <option value="NOTAC"${filters.charger === "NOTAC" ? " selected" : ""}>NOT AC</option>
-                                <option value="NONE"${filters.charger === "NONE" ? " selected" : ""}>NONE</option>
-                                <option value="UNKNOWN"${filters.charger === "UNKNOWN" ? " selected" : ""}>UNKNOWN</option>
-                            </select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="filter-display">Display:</label>
-                            <select id="filter-display">
-                                <option value="">Sve</option>
-                                <option value="ON"${filters.display === "ON" ? " selected" : ""}>ON</option>
-                                <option value="OFF"${filters.display === "OFF" ? " selected" : ""}>OFF</option>
-                            </select>
-                        </div>
-                        <div class="filter-item filter-checkbox">
-                            <input type="checkbox" id="filter-duplicateIp" ${filters.duplicateIp ? "checked" : ""}>
-                            <label for="filter-duplicateIp">Duplicate IP</label>
-                        </div>
-                        <div class="filter-item">
-                            <label for="filter-distance">Udaljenost:</label>
-                            <select id="filter-distance">${distanceOpts.map(o => `<option value="${o}"${filters.distance === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
-                        </div>
-                        <div class="filter-item">
-                            <label for="filter-update">Ažuriranje:</label>
-                            <select id="filter-update">${updateOpts.map(o => `<option value="${o}"${filters.update === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
-                        </div>
-                    `;
+                                    <div class="filter-item">
+                                        <label for="filter-battery">Baterija:</label>
+                                        <select id="filter-battery">${batteryOpts.map(o => `<option value="${o}"${filters.battery === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label for="filter-health">Zdravlje:</label>
+                                        <select id="filter-health">
+                                            <option value="">Sve</option>
+                                            <option value="GOOD"${filters.health === "GOOD" ? " selected" : ""}>GOOD</option>
+                                            <option value="NOTGOOD"${filters.health === "NOTGOOD" ? " " : ""}>NOT GOOD</option>
+                                            <option value="NONE"${filters.health === "NONE" ? " selected" : ""}>NONE</option>
+                                            <option value="UNKNOWN"${filters.health === "UNKNOWN" ? " selected" : ""}>UNKNOWN</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label for="filter-temp">Temp:</label>
+                                        <select id="filter-temp">${tempOpts.map(o => `<option value="${o}"${filters.temp === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label for="filter-charger">Punjač:</label>
+                                        <select id="filter-charger">
+                                            <option value="">Sve</option>
+                                            <option value="AC"${filters.charger === "AC" ? " selected" : ""}>AC</option>
+                                            <option value="NOTAC"${filters.charger === "NOTAC" ? " selected" : ""}>NOT AC</option>
+                                            <option value="NONE"${filters.charger === "NONE" ? " selected" : ""}>NONE</option>
+                                            <option value="UNKNOWN"${filters.charger === "UNKNOWN" ? " selected" : ""}>UNKNOWN</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label for="filter-display">Display:</label>
+                                        <select id="filter-display">
+                                            <option value="">Sve</option>
+                                            <option value="ON"${filters.display === "ON" ? " selected" : ""}>ON</option>
+                                            <option value="OFF"${filters.display === "OFF" ? " selected" : ""}>OFF</option>
+                                        </select>
+                                    </div>
+                                    <div class="filter-item filter-checkbox">
+                                        <input type="checkbox" id="filter-duplicateIp" ${filters.duplicateIp ? "checked" : ""}>
+                                        <label for="filter-duplicateIp">Duplicate IP</label>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label for="filter-distance">Udaljenost:</label>
+                                        <select id="filter-distance">${distanceOpts.map(o => `<option value="${o}"${filters.distance === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label for="filter-update">Ažuriranje:</label>
+                                        <select id="filter-update">${updateOpts.map(o => `<option value="${o}"${filters.update === o ? " selected" : ""}>${o || "Sve"}</option>`).join("")}</select>
+                                    </div>
+                                `;
             // Event listeners
             panel.querySelectorAll("select, input[type=checkbox]").forEach(el => {
                 el.onchange = () => {
@@ -719,7 +810,10 @@
         // --- FILTERING LOGIC ---
         function applyFiltersAndRender() {
             let devices = window.allDevices || [];
-            const filters = { ...filterDefaults, ...getFilters() };
+            const filterToggle = document.getElementById('filter-toggle');
+            // Ako je sklopka isključena, koristi zadane (prazne) filtere. Ako je uključena, koristi spremljene.
+            const filters = filterToggle.checked ? { ...filterDefaults, ...getFilters() } : { ...filterDefaults };
+
             // Duplicate IPs
             let duplicateIps = {};
             if (filters.duplicateIp) {
@@ -797,84 +891,124 @@
             renderDevices(filtered);
             renderMap(filtered, selectedDeviceIndex);
         }
-        // --- PATCH TABS FOR FILTER ---
-        function patchTabsForFilter() {
-            // Desktop: filter je uvijek prikazan
-            // Mobile: filter je prvi tab, lista drugi, karta treći
-            function showTab(tab) {
-                const isMobile = window.innerWidth <= 600;
-                const devicesPanel = document.getElementById('devices-panel');
-                const mapPanel = document.getElementById('map-panel');
-                const tabs = document.getElementById('tabs');
-                const filterPanel = document.getElementById('filter-panel'); // Desktop filter panel
-                const filterPanelMobile = document.getElementById('filter-panel-mobile'); // Mobile filter panel
+        // --- HELPER FOR LOC TYPE ---
+        function getLocTypeForSelectedDevice() {
+            if (selectedDeviceIndex === null || !window.devicesData || !window.devicesData[selectedDeviceIndex]) return 'start';
+            const p = window.devicesData[selectedDeviceIndex].properties || {};
+            const hasStartLoc = p.startLat && p.startLon;
+            const hasCurrentLoc = p.currentLat && p.currentLon;
+            let currentDistMeters = 0;
 
-                if (isMobile) {
-                    tabs.style.display = 'flex';
-                    if (tab === 'filter') {
-                        filterPanelMobile.style.display = ''; // Prikaz mobilnog filtera
-                        filterPanel.style.display = 'none'; // Sakrij desktop filter
-                        devicesPanel.style.display = 'none'; // Sakrij listu uređaja
-                        mapPanel.style.display = 'none'; // Sakrij kartu
-                        document.getElementById('tab-filter').classList.add('active');
-                        document.getElementById('tab-lista').classList.remove('active');
-                        document.getElementById('tab-karta').classList.remove('active');
-                    } else if (tab === 'lista') {
-                        filterPanelMobile.style.display = 'none'; // Sakrij mobilni filter
-                        filterPanel.style.display = 'none'; // **KLJUČNA IZMJENA: Sakrij desktop filter**
-                        devicesPanel.style.display = ''; // Prikaz liste uređaja
-                        mapPanel.style.display = 'none'; // Sakrij kartu
-                        document.getElementById('tab-filter').classList.remove('active');
-                        document.getElementById('tab-lista').classList.add('active');
-                        document.getElementById('tab-karta').classList.remove('active');
-                        // Re-render devices to ensure selection is visible
-                        renderDevices(window.devicesData);
-                    } else { // tab === 'karta'
-                        filterPanelMobile.style.display = 'none'; // Sakrij mobilni filter
-                        filterPanel.style.display = 'none'; // **KLJUČNA IZMJENA: Sakrij desktop filter**
-                        devicesPanel.style.display = 'none'; // Sakrij listu uređaja
-                        mapPanel.style.display = ''; // Prikaz karte
-                        document.getElementById('tab-filter').classList.remove('active');
-                        document.getElementById('tab-lista').classList.remove('active');
-                        document.getElementById('tab-karta').classList.add('active');
-                        // Re-render map to ensure selection is visible
-                        renderMap(window.devicesData, selectedDeviceIndex);
-                        // Also, if a device is selected, open its info window
-                        if (selectedDeviceIndex !== null && window.devicesData[selectedDeviceIndex]) {
-                            const p = window.devicesData[selectedDeviceIndex].properties || {};
-                            let locType = "start";
-                            if (p.currentLat && p.currentLon && p.startLat && p.startLon) {
-                                const dist = getDistanceInMeters(
-                                    parseFloat(p.startLat), parseFloat(p.startLon),
-                                    parseFloat(p.currentLat), parseFloat(p.currentLon)
-                                );
-                                if (dist > 7) locType = "current";
-                            }
-                            openInfoWindowForDevice(selectedDeviceIndex, locType);
-                        }
-                    }
-                } else { // Desktop prikaz
-                    tabs.style.display = 'none';
-                    filterPanel.style.display = 'grid';
-                    devicesPanel.style.display = 'flex';
-                    mapPanel.style.display = 'flex';
-                }
+            if (hasStartLoc && hasCurrentLoc) {
+                currentDistMeters = getDistanceInMeters(
+                    parseFloat(p.startLat), parseFloat(p.startLon),
+                    parseFloat(p.currentLat), parseFloat(p.currentLon)
+                );
             }
-            window.showTab = showTab;
-            document.getElementById('tab-filter').onclick = () => showTab('filter');
-            document.getElementById('tab-lista').onclick = () => showTab('lista');
-            document.getElementById('tab-karta').onclick = () => showTab('karta');
-            window.addEventListener('resize', () => {
-                showTab(window.innerWidth <= 600
-                    ? (document.getElementById('tab-filter').classList.contains('active') ? 'filter'
-                        : document.getElementById('tab-lista').classList.contains('active') ? 'lista' : 'karta')
-                    : 'both');
-            });
+
+            if (currentDistMeters < 8 && hasCurrentLoc) {
+                return "current";
+            } else if (currentDistMeters >= 8 && hasCurrentLoc) {
+                return "current";
+            } else if (hasStartLoc) {
+                return "start";
+            } else if (hasCurrentLoc) {
+                return "current";
+            }
+            return 'start'; // Default fallback
         }
 
+        // Updated showTab function
+        function showTab(requestedTab = null) {
+            const isMobile = window.innerWidth <= 600;
+            const isTablet = window.innerWidth > 600 && window.innerWidth <= 900;
+            const isDesktop = window.innerWidth > 900;
 
-    </script>
-    <script>
+            const devicesPanel = document.getElementById('devices-panel');
+            const mapPanel = document.getElementById('map-panel');
+            const tabs = document.getElementById('tabs');
+            const filterPanel = document.getElementById('filter-panel'); // Desktop filter panel
+            const filterPanelMobile = document.getElementById('filter-panel-mobile'); // Mobile filter panel
+            const filterToggle = document.getElementById('filter-toggle');
+            const tabFilterBtn = document.getElementById('tab-filter'); // Get the filter tab button
+
+            // Determine the currently active tab from the UI, if no specific tab is requested
+            let currentlyActiveTabId = null;
+            const activeTabButton = document.querySelector('.tab-btn.active');
+            if (activeTabButton) {
+                currentlyActiveTabId = activeTabButton.id.replace('tab-', '');
+            }
+
+            // If a tab was explicitly requested, use it. Otherwise, use the currently active one.
+            let targetTab = requestedTab || currentlyActiveTabId || 'lista'; // Default to 'lista' if nothing is active
+
+            // --- Core Logic for Filter Tab Visibility and Switching ---
+            // If filter switch is OFF and the 'filter' tab is currently targeted, switch to 'lista'
+            if (!filterToggle.checked && targetTab === 'filter') {
+                targetTab = 'lista'; // Force switch to 'lista'
+            }
+
+            // Reset all displays and active classes
+            devicesPanel.style.display = 'none';
+            mapPanel.style.display = 'none';
+            filterPanel.style.display = 'none';
+            filterPanelMobile.style.display = 'none';
+            tabs.style.display = 'none';
+
+            document.getElementById('tab-filter').classList.remove('active');
+            document.getElementById('tab-lista').classList.remove('active');
+            document.getElementById('tab-karta').classList.remove('active');
+
+            // Conditionally hide the 'Filter' tab button itself
+            if (tabFilterBtn) {
+                tabFilterBtn.style.display = filterToggle.checked ? 'block' : 'none';
+            }
+
+
+            // Apply display logic based on screen size and targetTab
+            if (isMobile) {
+                tabs.style.display = 'flex';
+                if (targetTab === 'filter' && filterToggle.checked) { // Only show filter tab if toggle is ON
+                    filterPanelMobile.style.display = 'grid';
+                    document.getElementById('tab-filter').classList.add('active');
+                } else if (targetTab === 'karta') {
+                    mapPanel.style.display = '';
+                    document.getElementById('tab-karta').classList.add('active');
+                    renderMap(window.devicesData, selectedDeviceIndex);
+                    if (selectedDeviceIndex !== null && window.devicesData[selectedDeviceIndex]) {
+                        openInfoWindowForDevice(selectedDeviceIndex, getLocTypeForSelectedDevice());
+                    }
+                } else { // Default to 'lista'
+                    devicesPanel.style.display = '';
+                    document.getElementById('tab-lista').classList.add('active');
+                    renderDevices(window.devicesData);
+                }
+            } else if (isTablet) {
+                tabs.style.display = 'flex'; // Tabs for Lista/Karta
+                filterPanel.style.display = filterToggle.checked ? 'grid' : 'none'; // Desktop filter panel visibility controlled by toggle
+                filterPanelMobile.style.display = 'none'; // Ensure mobile filter is hidden
+
+                if (targetTab === 'karta') {
+                    mapPanel.style.display = 'flex';
+                    document.getElementById('tab-karta').classList.add('active');
+                    renderMap(window.devicesData, selectedDeviceIndex);
+                    if (selectedDeviceIndex !== null && window.devicesData[selectedDeviceIndex]) {
+                        openInfoWindowForDevice(selectedDeviceIndex, getLocTypeForSelectedDevice());
+                    }
+                } else { // Default to 'lista'
+                    devicesPanel.style.display = 'flex';
+                    document.getElementById('tab-lista').classList.add('active');
+                    renderDevices(window.devicesData);
+                }
+            } else { // Desktop view
+                tabs.style.display = 'none';
+                filterPanel.style.display = filterToggle.checked ? 'grid' : 'none';
+                devicesPanel.style.display = 'flex';
+                filterPanelMobile.style.display = 'none';
+                mapPanel.style.display = 'flex';
+            }
+        }
+
         // Global variable to hold the status icon element
         let statusIconElement;
 
@@ -896,16 +1030,10 @@
                 case 'success':
                     statusIconElement.classList.add('status-success');
                     statusIconElement.innerHTML = '<i class="fa-solid fa-check"></i>';
-                    //setTimeout(() => {
-                    //    statusIconElement.style.display = 'none'; // Hide after a short delay
-                    //}, 2000); // 2 seconds
                     break;
                 case 'error':
                     statusIconElement.classList.add('status-error');
                     statusIconElement.innerHTML = '<i class="fa-solid fa-xmark"></i>';
-                    //setTimeout(() => {
-                    //    statusIconElement.style.display = 'none'; // Hide after a short delay
-                    //}, 2000); // 2 seconds
                     break;
                 default:
                     statusIconElement.style.display = 'none'; // Hide by default or unknown status
@@ -928,7 +1056,7 @@
         // Helpers
         function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
             function toRad(x) { return x * Math.PI / 180; }
-            var R = 6371;
+            var R = 6371000; // Radius Zemlje u metrima
             var dLat = toRad(lat2 - lat1);
             var dLon = toRad(lon2 - lon1);
             var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -1065,7 +1193,7 @@
         }
         function getDistanceInMeters(lat1, lon1, lat2, lon2) {
             function toRad(x) { return x * Math.PI / 180; }
-            var R = 6371000;
+            var R = 6371000; // Radius Zemlje u metrima
             var dLat = toRad(lat2 - lat1);
             var dLon = toRad(lon2 - lon1);
             var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -1074,6 +1202,15 @@
             var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
+
+        // New function for distance color - returns direct color values
+        function distanceColor(dist) {
+            if (dist < 8) return '#43a047';       // Green (var(--success))
+            if (dist >= 8 && dist < 18) return '#fbc02d'; // Yellow (var(--warning))
+            if (dist >= 18 && dist < 30) return 'orange'; // Orange
+            return '#e53935';                     // Red (var(--danger))
+        }
+
         function batteryIcon(level) {
             let color = batteryColor(level);
             return `<i class="fa-solid fa-battery-full" style="color:${color}" title="Baterija"></i>`;
@@ -1104,13 +1241,15 @@
 
         function deviceDetailsHtml(dev, p) {
             // Izračun udaljenosti i vremena ažuriranja
-            let dist = 0, distRed = false, agoMin = 0, agoRed = false;
+            let dist = 0, agoMin = 0, agoRed = false;
+            let distColorStyle = '';
+
             if (p.startLat && p.startLon && p.currentLat && p.currentLon) {
                 dist = getDistanceInMeters(
                     parseFloat(p.startLat), parseFloat(p.startLon),
                     parseFloat(p.currentLat), parseFloat(p.currentLon)
                 );
-                distRed = dist > 7;
+                distColorStyle = `color:${distanceColor(dist)};`; /* Uklonjen font-weight:600 */
             }
             if (p.lastUpdate) {
                 const t = new Date(p.lastUpdate);
@@ -1120,33 +1259,35 @@
             }
 
             return `
-                    <div class="info-window-details">
-                        <div class="header">
-                            <i class="fa-solid fa-microchip"></i> ${dev.name || 'Nepoznato ime'}
-                        </div>
-                        <div class="prop-grid">
-                            <div class="label-icon">${batteryIcon(p.Level ?? 0)} Baterija:</div><div class="value">${isNaN(p.Level) ? '?' : (p.Level ?? '?') + '%'}</div>
-                            <div class="label-icon">${healthIcon(p.Health)} Zdravlje:</div><div class="value">${p.Health ?? '?'}</div>
-                            <div class="label-icon">${tempIcon(p.Temperature ?? 0)} Temp:</div><div class="value">${isNaN(p.Temperature) ? '?' : (p.Temperature ?? '?') + '°C'}</div>
-                            <div class="label-icon">${pluggedMiniIcon(p.Plugged)} Punjač:</div><div class="value">${p.Plugged ?? '?'}</div>
-                            <div class="label-icon">${displayMiniIcon(p.display)} Display:</div><div class="value">${p.display == "1" ? "DA" : "NE"}</div>
-                            <div class="label-icon">${wifiMiniIcon()} IP:</div><div class="value">${p.ip ?? '?'}</div>
-                        </div>
-                        <div class="location-info ${distRed ? 'red' : ''}">
-                            <i class="fa-solid fa-location-dot"></i>
-                            <b>Start:</b> ${p.startLat && p.startLon ? `${p.startLat}, ${p.startLon}` : 'N/A'}
-                        </div>
-                        <div class="location-info ${distRed ? 'red' : ''}">
-                            <i class="fa-solid fa-location-dot"></i>
-                            <b>Trenutno:</b> ${p.currentLat && p.currentLon ? `${p.currentLat}, ${p.currentLon}` : 'N/A'}
-                            ${dist ? `<span style="font-size:0.95em;">(${dist.toFixed(1)} m)</span>` : ''}
-                        </div>
-                        <div class="last-update-info ${agoRed ? 'red' : ''}">
-                            <i class="fa-regular fa-clock"></i>
-                            <b>Ažurirano:</b> ${p.lastUpdate ? timeAgo(p.lastUpdate) : 'N/A'}
-                        </div>
-                    </div>
-                    `;
+                                <div class="info-window-details">
+                                    <div class="header">
+                                        <i class="fa-solid fa-microchip"></i> ${dev.name || 'Nepoznato ime'}
+                                    </div>
+                                    <div class="prop-grid">
+                                        <div class="label-icon">${batteryIcon(p.Level ?? 0)} Baterija:</div><div class="value" style="color:${batteryColor(p.Level ?? 0)};">${isNaN(p.Level) ? '?' : (p.Level ?? '?') + '%'}</div>
+                                        <div class="label-icon">${healthIcon(p.Health)} Zdravlje:</div><div class="value" style="color:${healthColor(p.Health)};">${p.Health ?? '?'}</div>
+                                        <div class="label-icon">${tempIcon(p.Temperature ?? 0)} Temp:</div><div class="value" style="color:${tempColor(p.Temperature ?? 0)};">${isNaN(p.Temperature) ? '?' : (p.Temperature ?? '?') + '°C'}</div>
+                                        <div class="label-icon">${pluggedMiniIcon(p.Plugged)} Punjač:</div><div class="value" style="color:var(--primary);">${p.Plugged ?? '?'}</div>
+                                        <div class="label-icon">${displayMiniIcon(p.display)} Display:</div><div class="value" style="color:${p.display == "1" ? 'var(--success)' : 'var(--muted)'};">${p.display == "1" ? "DA" : "NE"}</div>
+                                        <div class="label-icon">${wifiMiniIcon()} IP:</div><div class="value" style="color:var(--primary);">${p.ip ?? '?'}</div>
+                                    </div>
+                                    <div class="location-info" style="margin-top: 0.5rem;">
+                                        <i class="fa-solid fa-location-dot" style="color: ${distanceColor(dist)};"></i>
+                                        <span style="color:var(--muted);">Početna:</span> <span style="${distColorStyle}">${p.startLat && p.startLon ? `${p.startLat}, ${p.startLon}` : 'N/A'}</span>
+                                    </div>
+                                    <div class="location-info" style="margin-top: 0.2rem;">
+                                        <i class="fa-solid fa-location-dot" style="color: ${distanceColor(dist)};"></i>
+                                        <span style="color:var(--muted);">Trenutno:</span> <span style="${distColorStyle}">${p.currentLat && p.currentLon ? `${p.currentLat}, ${p.currentLon}` : 'N/A'}</span>
+                                    </div>
+                                    <div class="last-update-info ${agoRed ? 'red' : ''}" style="margin-top: 0.5rem;">
+                                        <div>
+                                            <i class="fa-regular fa-clock" ${(p.lastUpdate && ((new Date() - new Date(p.lastUpdate)) / 60000) > 20) ? 'style="color:#e53935"' : ''}></i>
+                                            <span style="color:var(--muted);">Ažurirano:</span> <span style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'}">${p.lastUpdate ? timeAgo(p.lastUpdate) : 'N/A'}</span>
+                                        </div>
+                                        ${dist ? `<span style="${distColorStyle}">(${dist.toFixed(1)} m)</span>` : ''}
+                                    </div>
+                                </div>
+                                `;
         }
 
 
@@ -1156,35 +1297,140 @@
             clearPolylines();
             if (!devices || !devices.length) return;
             let bounds = new google.maps.LatLngBounds();
-            if (!infoWindow) infoWindow = new google.maps.InfoWindow();
+            if (!infoWindow) {
+                infoWindow = new google.maps.InfoWindow();
+                // Add listener for info window close button
+                infoWindow.addListener('closeclick', function () {
+                    deselectDevice();
+                });
+            }
 
             devices.forEach((dev, idx) => {
                 const p = dev.properties || {};
                 const hasStart = p.startLat && p.startLon;
                 const hasCurrent = p.currentLat && p.currentLon;
-                let showCurrent = false;
                 let distMeters = 0;
+
                 if (hasStart && hasCurrent) {
                     distMeters = getDistanceInMeters(
                         parseFloat(p.startLat), parseFloat(p.startLon),
                         parseFloat(p.currentLat), parseFloat(p.currentLon)
                     );
-                    showCurrent = distMeters > 7;
                 }
-                // Start location marker (zeleni krug)
-                if (hasStart) {
+
+                // Handle case: distance < 8 meters
+                if (distMeters < 8 && hasCurrent) { // Only current location, green, no polyline
+                    const marker = new google.maps.Marker({
+                        position: { lat: parseFloat(p.currentLat), lng: parseFloat(p.currentLon) },
+                        map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 12,
+                            fillColor: distanceColor(0), // Always green for < 8m (dist=0 to get green)
+                            fillOpacity: 1,
+                            strokeWeight: 3,
+                            strokeColor: distanceColor(0)
+                        },
+                        title: `${dev.name} (Trenutno)`,
+                        zIndex: 2
+                    });
+                    marker.addListener('click', function (e) {
+                        if (selectedDeviceIndex === idx && window.infoWindow && window.infoWindow.getMap()) {
+                            deselectDevice();
+                        } else {
+                            infoWindow.setContent(deviceDetailsHtml(dev, p));
+                            infoWindow.open(map, marker);
+                            selectDevice(idx, "current"); // Always open current marker for < 8m
+                        }
+                        if (e && e.stopPropagation) e.stopPropagation();
+                    });
+                    markers.push(marker);
+                    bounds.extend(marker.getPosition());
+                } else if (hasStart && hasCurrent) { // Handle cases: >= 8m (yellow, orange, red)
+                    const currentLocationColor = distanceColor(distMeters);
+
+                    // Start location marker (always green)
+                    const startMarker = new google.maps.Marker({
+                        position: { lat: parseFloat(p.startLat), lng: parseFloat(p.startLon) },
+                        map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: distanceColor(0), // Start location is always green
+                            fillOpacity: 1,
+                            strokeWeight: 2,
+                            strokeColor: distanceColor(0)
+                        },
+                        title: `${dev.name} (Početna)`,
+                        zIndex: 1
+                    });
+                    startMarker.addListener('click', function (e) {
+                        if (selectedDeviceIndex === idx && window.infoWindow && window.infoWindow.getMap()) {
+                            deselectDevice();
+                        } else {
+                            infoWindow.setContent(deviceDetailsHtml(dev, p));
+                            infoWindow.open(map, startMarker);
+                            selectDevice(idx, "start");
+                        }
+                        if (e && e.stopPropagation) e.stopPropagation();
+                    });
+                    markers.push(startMarker);
+                    bounds.extend(startMarker.getPosition());
+
+                    // Current location marker with distance color
+                    const currentMarker = new google.maps.Marker({
+                        position: { lat: parseFloat(p.currentLat), lng: parseFloat(p.currentLon) },
+                        map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 12,
+                            fillColor: currentLocationColor, // Boja ovisno o udaljenosti
+                            fillOpacity: 1,
+                            strokeWeight: 3,
+                            strokeColor: currentLocationColor // Boja obruba ovisno o udaljenosti
+                        },
+                        title: `${dev.name} (Trenutno)`,
+                        zIndex: 2
+                    });
+                    currentMarker.addListener('click', function (e) {
+                        if (selectedDeviceIndex === idx && window.infoWindow && window.infoWindow.getMap()) {
+                            deselectDevice();
+                        } else {
+                            infoWindow.setContent(deviceDetailsHtml(dev, p));
+                            infoWindow.open(map, currentMarker);
+                            selectDevice(idx, "current");
+                        }
+                        if (e && e.stopPropagation) e.stopPropagation();
+                    });
+                    markers.push(currentMarker);
+                    bounds.extend(currentMarker.getPosition());
+
+                    // Polyline between start and current with distance color
+                    const line = new google.maps.Polyline({
+                        path: [
+                            { lat: parseFloat(p.startLat), lng: parseFloat(p.startLon) },
+                            { lat: parseFloat(p.currentLat), lng: parseFloat(p.currentLon) }
+                        ],
+                        geodesic: true,
+                        strokeColor: currentLocationColor, // Boja linije ovisno o udaljenosti
+                        strokeOpacity: 1,
+                        strokeWeight: 2,
+                        map: map
+                    });
+                    polylines.push(line);
+                } else if (hasStart && !hasCurrent) { // Only start location, green, no current, no polyline
                     const marker = new google.maps.Marker({
                         position: { lat: parseFloat(p.startLat), lng: parseFloat(p.startLon) },
                         map,
                         icon: {
                             path: google.maps.SymbolPath.CIRCLE,
                             scale: 10,
-                            fillColor: "#43a047",
+                            fillColor: distanceColor(0),
                             fillOpacity: 1,
                             strokeWeight: 2,
-                            strokeColor: "#2e7031"
+                            strokeColor: distanceColor(0)
                         },
-                        title: `${dev.name} (Start)`,
+                        title: `${dev.name} (Početna)`,
                         zIndex: 1
                     });
                     marker.addListener('click', function (e) {
@@ -1199,19 +1445,17 @@
                     });
                     markers.push(marker);
                     bounds.extend(marker.getPosition());
-                }
-                // Current location marker (crveni krug, samo ako je >7m)
-                if (hasCurrent && showCurrent) {
+                } else if (!hasStart && hasCurrent) { // Only current location, green (if no start, assume dist is 0 for coloring)
                     const marker = new google.maps.Marker({
                         position: { lat: parseFloat(p.currentLat), lng: parseFloat(p.currentLon) },
                         map,
                         icon: {
                             path: google.maps.SymbolPath.CIRCLE,
                             scale: 12,
-                            fillColor: "#e53935",
+                            fillColor: distanceColor(0), // Green if no start to compare against
                             fillOpacity: 1,
                             strokeWeight: 3,
-                            strokeColor: "#b71c1c"
+                            strokeColor: distanceColor(0)
                         },
                         title: `${dev.name} (Trenutno)`,
                         zIndex: 2
@@ -1229,22 +1473,8 @@
                     markers.push(marker);
                     bounds.extend(marker.getPosition());
                 }
-                // Polyline između start i current (uvijek ako oba postoje)
-                if (hasStart && hasCurrent) {
-                    const line = new google.maps.Polyline({
-                        path: [
-                            { lat: parseFloat(p.startLat), lng: parseFloat(p.startLon) },
-                            { lat: parseFloat(p.currentLat), lng: parseFloat(p.currentLon) }
-                        ],
-                        geodesic: true,
-                        strokeColor: "#e53935",
-                        strokeOpacity: 1,
-                        strokeWeight: 2,
-                        map: map
-                    });
-                    polylines.push(line);
-                }
             });
+
             if (!bounds.isEmpty()) {
                 map.fitBounds(bounds);
             }
@@ -1259,7 +1489,14 @@
                         parseFloat(p.startLat), parseFloat(p.startLon),
                         parseFloat(p.currentLat), parseFloat(p.currentLon)
                     );
-                    if (dist > 7) locType = "current";
+                    // Crucial fix: if distance < 8, always show current location details
+                    if (dist < 8) {
+                        locType = "current";
+                    } else if (dist >= 8) {
+                        locType = "current"; // For >=8m, we also want current location marker
+                    }
+                } else if (p.currentLat && p.currentLon) { // If only current location is available
+                    locType = "current";
                 }
                 openInfoWindowForDevice(selectIdx, locType);
             }
@@ -1299,25 +1536,13 @@
             }
         }
 
-        //// Klik izvan kartice u listi deselektira
-        //document.addEventListener('click', function (e) {
-        //    // Ako klik nije na .device-card, deselektiraj (ali ignoriraj klikove na mapu i info prozor)
-        //    if (
-        //        !e.target.closest('.device-card') &&
-        //        !e.target.closest('#map') &&
-        //        !e.target.closest('.gm-style-iw')
-        //    ) {
-        //        deselectDevice();
-        //    }
-        //});
-
         // Dodaj "Odustani" na postavke
         document.getElementById('cancelSettingsBtn').onclick = function (e) {
             e.preventDefault();
             hidePopup();
         };
         // Select device in list and on map
-        function selectDevice(idx, locType) {
+        function selectDevice(idx, locTypeFromMap = null) { // Added locTypeFromMap parameter
             selectedDeviceIndex = idx;
             // Highlight card
             document.querySelectorAll('.device-card').forEach((el, i) => {
@@ -1327,13 +1552,38 @@
             if (window.devicesData && window.devicesData[idx]) {
                 const p = window.devicesData[idx].properties || {};
                 let lat = 0, lon = 0;
-                if (locType === "current" && p.currentLat && p.currentLon) {
+                let actualLocType = locTypeFromMap; // Use provided locType if from map click
+
+                // Determine locType if not provided by map click
+                if (!actualLocType) {
+                    const hasStart = p.startLat && p.startLon;
+                    const hasCurrent = p.currentLat && p.currentLon;
+                    let distMeters = 0;
+
+                    if (hasStart && hasCurrent) {
+                        distMeters = getDistanceInMeters(
+                            parseFloat(p.startLat), parseFloat(p.startLon),
+                            parseFloat(p.currentLat), parseFloat(p.currentLon)
+                        );
+                    }
+
+                    if (distMeters < 8 && hasCurrent) {
+                        actualLocType = "current"; // If < 8m, always focus on current (only one visible)
+                    } else if (hasCurrent) { // For >= 8m, or only current exists, focus on current
+                        actualLocType = "current";
+                    } else if (hasStart) { // If only start exists
+                        actualLocType = "start";
+                    }
+                }
+
+                if (actualLocType === "current" && p.currentLat && p.currentLon) {
                     lat = parseFloat(p.currentLat);
                     lon = parseFloat(p.currentLon);
-                } else if (p.startLat && p.startLon) {
+                } else if (actualLocType === "start" && p.startLat && p.startLon) {
                     lat = parseFloat(p.startLat);
-                    lon = parseFloat(p.startLon);
+                    lon = parseFloat(p.lon); // Assuming 'lon' is intended for startLon
                 }
+
                 if (lat && lon && map) {
                     map.panTo({ lat, lng: lon });
                     map.setZoom(15);
@@ -1363,44 +1613,66 @@
                 const startLon = parseFloat(p.startLon || 0);
                 const currentLat = parseFloat(p.currentLat || 0);
                 const currentLon = parseFloat(p.currentLon || 0);
-                let distance = '';
+                let distanceText = '';
+                let distMeters = 0;
+                let distColorStyle = '';
+
                 if (startLat && startLon && currentLat && currentLon) {
-                    const d = getDistanceFromLatLonInKm(startLat, startLon, currentLat, currentLon);
-                    distance = `<span class="distance">(${d.toFixed(2)} km)</span>`;
+                    distMeters = getDistanceFromLatLonInKm(startLat, startLon, currentLat, currentLon);
+                    // This line was changed:
+                    distColorStyle = `color:${distanceColor(distMeters)};`; /* Uklonjen font-weight:600 */
+                    distanceText = `<span style="${distColorStyle}">(${distMeters.toFixed(2)} m)</span>`;
                 }
                 // Last update
                 const lastUpdate = p.lastUpdate ? timeAgo(p.lastUpdate) : '';
+                const agoMin = p.lastUpdate ? Math.floor((new Date() - new Date(p.lastUpdate)) / 60000) : 0;
+                const agoRed = agoMin > 20;
+
                 // Card
                 const card = document.createElement('div');
                 card.className = 'device-card' + (selectedDeviceIndex === idx ? ' selected' : '');
                 card.innerHTML = `
-                                            <div class="device-header">
-                        <i class="fa-solid fa-microchip"></i>
-                        <span>${dev.name || 'Nepoznato ime'}</span>
-                    </div>
-                    <div class="device-props" style="display:grid;grid-template-columns:1fr 1fr;gap:0.2em 0.7em;">
-                        <div class="prop">${batteryIcon(level)}<span>Baterija</span><span>${isNaN(level) ? '?' : level + '%'}</span></div>
-                        <div class="prop">${healthIcon(health)}<span>Zdravlje</span><span>${health || '?'}</span></div>
-                        <div class="prop">${tempIcon(temp)}<span>Temp</span><span>${isNaN(temp) ? '?' : temp.toFixed(1) + '°C'}</span></div>
-                        <div class="prop">${pluggedMiniIcon(plugged)}<span>Punjač</span><span>${plugged || '?'}</span></div>
-                        <div class="prop">${displayMiniIcon(display)}<span>Display</span><span>${display == "1" ? "DA" : "NE"}</span></div>
-                        <div class="prop">${wifiMiniIcon()}<span>IP</span><span>${p.ip || '?'}</span></div>
-                    </div>
-                    <div class="prop" style="margin-top:4px;${(startLat && startLon && currentLat && currentLon && getDistanceInMeters(startLat, startLon, currentLat, currentLon) > 7) ? 'color:#e53935;font-weight:600' : ''}">
-                        <i class="fa-solid fa-location-dot" ${(startLat && startLon && currentLat && currentLon && getDistanceInMeters(startLat, startLon, currentLat, currentLon) > 7) ? 'style="color:#e53935"' : ''}></i>
-                        <span>Start</span>
-                        <span>${p.startLat && p.startLon ? `${p.startLat}, ${p.startLon}` : 'N/A'}</span>
-                    </div>
-                    <div class="prop" style="margin-top:2px;${(startLat && startLon && currentLat && currentLon && getDistanceInMeters(startLat, startLon, currentLat, currentLon) > 7) ? 'color:#e53935;font-weight:600' : ''}">
-                        <i class="fa-solid fa-location-dot" ${(startLat && startLon && currentLat && currentLon && getDistanceInMeters(startLat, startLon, currentLat, currentLon) > 7) ? 'style="color:#e53935"' : ''}></i>
-                        <span>Trenutno</span>
-                        <span>${p.currentLat && p.currentLon ? `${p.currentLat}, ${p.currentLon}` : 'N/A'}</span>
-                        ${distance}
-                    </div>
-                    <div class="last-update" style="${(p.lastUpdate && ((new Date() - new Date(p.lastUpdate)) / 60000) > 20) ? 'color:#e53935;font-weight:600' : ''}">
-                        <i class="fa-regular fa-clock" ${(p.lastUpdate && ((new Date() - new Date(p.lastUpdate)) / 60000) > 20) ? 'style="color:#e53935"' : ''}></i>
-                        <span>${lastUpdate ? 'Ažurirano ' + lastUpdate : 'Nema podataka'}</span>
-                    </div>
+                                <div class="device-header">
+                                    <i class="fa-solid fa-microchip"></i>
+                                    <span>${dev.name || 'Nepoznato ime'}</span>
+                                </div>
+                                <div class="device-props" style="display:grid;grid-template-columns:1fr 1fr;gap:0.2em 0.7em;">
+                                    <div class="prop">
+                                        ${batteryIcon(level)}<span style="color:var(--muted);">Baterija</span><span style="color:${batteryColor(level)};">${isNaN(level) ? '?' : level + '%'}</span>
+                                    </div>
+                                    <div class="prop">
+                                        ${healthIcon(health)}<span style="color:var(--muted);">Zdravlje</span><span style="color:${healthColor(health)};">${health || '?'}</span>
+                                    </div>
+                                    <div class="prop">
+                                        ${tempIcon(temp)}<span style="color:var(--muted);">Temp</span><span style="color:${tempColor(temp)};">${isNaN(temp) ? '?' : temp.toFixed(1) + '°C'}</span>
+                                    </div>
+                                    <div class="prop">
+                                        ${pluggedMiniIcon(plugged)}<span style="color:var(--muted);">Punjač</span><span style="color:var(--primary);">${plugged || '?'}</span>
+                                    </div>
+                                    <div class="prop">
+                                        ${displayMiniIcon(display)}<span style="color:var(--muted);">Display</span><span style="color:${display == "1" ? 'var(--success)' : 'var(--muted)'};">${display == "1" ? "DA" : "NE"}</span>
+                                    </div>
+                                    <div class="prop">
+                                        ${wifiMiniIcon()}<span style="color:var(--muted);">IP</span><span style="color:var(--primary);">${p.ip || '?'}</span>
+                                    </div>
+                                </div>
+                                <div class="prop" style="margin-top:0.5rem;">
+                                    <i class="fa-solid fa-location-dot" style="color: ${distanceColor(distMeters)};"></i>
+                                    <span style="color:var(--muted);">Početna</span>
+                                    <span style="${distColorStyle}">${p.startLat && p.startLon ? `${p.startLat}, ${p.startLon}` : 'N/A'}</span>
+                                </div>
+                                <div class="prop" style="margin-top:0.2rem;">
+                                    <i class="fa-solid fa-location-dot" style="color: ${distanceColor(distMeters)};"></i>
+                                    <span style="color:var(--muted);">Trenutno</span>
+                                    <span style="${distColorStyle}">${p.currentLat && p.currentLon ? `${p.currentLat}, ${p.currentLon}` : 'N/A'}</span>
+                                </div>
+                                <div class="last-update" style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'} margin-top:0.5rem;">
+                                    <div>
+                                        <i class="fa-regular fa-clock" ${agoRed ? 'style="color:#e53935"' : ''}></i>
+                                        <span style="color:var(--muted);">Ažurirano </span><span style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'}">${lastUpdate ? lastUpdate : 'Nema podataka'}</span>
+                                    </div>
+                                    ${distMeters ? distanceText : ''}
+                                </div>
 `;
                 card.onclick = () => {
                     if (selectedDeviceIndex === idx) { // Ako je već odabran, deselektiraj
@@ -1409,13 +1681,26 @@
                         selectDevice(idx);
                         // Prikaži info prozor na markeru (preferiraj current, ako postoji i prikazuje se)
                         const p = dev.properties || {};
-                        let locType = "start";
-                        if (p.currentLat && p.currentLon && p.startLat && p.startLon) {
-                            const dist = getDistanceInMeters(
+                        let locType = "start"; // Default to start
+                        const hasStartLoc = p.startLat && p.startLon;
+                        const hasCurrentLoc = p.currentLat && p.currentLon;
+                        let currentDistMeters = 0;
+
+                        if (hasStartLoc && hasCurrentLoc) {
+                            currentDistMeters = getDistanceInMeters(
                                 parseFloat(p.startLat), parseFloat(p.startLon),
                                 parseFloat(p.currentLat), parseFloat(p.currentLon)
                             );
-                            if (dist > 7) locType = "current";
+                        }
+
+                        if (currentDistMeters < 8 && hasCurrentLoc) {
+                            locType = "current"; // If < 8m, always show current marker details
+                        } else if (currentDistMeters >= 8 && hasCurrentLoc) {
+                            locType = "current"; // For >= 8m, also show current marker details
+                        } else if (hasStartLoc) { // Fallback if only start is available
+                            locType = "start";
+                        } else if (hasCurrentLoc) { // Fallback if only current is available
+                            locType = "current";
                         }
                         openInfoWindowForDevice(idx, locType);
                     }
@@ -1431,8 +1716,13 @@
 
             renderFilterPanel('filter-panel');
             renderFilterPanel('filter-panel-mobile');
-            patchTabsForFilter();
+
             const settings = getSettings();
+            // Load filter toggle state BEFORE loading all data
+            const filterToggle = document.getElementById('filter-toggle');
+            const savedFilterToggleState = localStorage.getItem('filterToggleState') !== 'false'; // Default to true (visible)
+            filterToggle.checked = savedFilterToggleState;
+
             if (!settings.url || !settings.pin) {
                 showPopup();
             } else {
@@ -1448,13 +1738,20 @@
                 hidePopup();
                 await loadAll();
             };
-            // Postavi zadani tab na "Lista" za mobilne uređaje pri učitavanju
-            showTab(window.innerWidth <= 600 ? 'lista' : 'both');
+
+            // Filter Toggle Logic
+            filterToggle.addEventListener('change', () => {
+                localStorage.setItem('filterToggleState', filterToggle.checked);
+                showTab();
+                applyFiltersAndRender();
+            });
+
+            // Initial tab display based on window size
+            showTab();
         });
         // --- PATCHED LOADALL ---
         async function loadAll() {
             updateStatusIcon('loading'); // Set to loading state
-            //renderDevices([{ name: "Učitavam...", properties: {} }]);
             try {
                 const [devices, key] = await Promise.all([fetchDevices(), fetchMapKey()]);
                 window.allDevices = devices;
@@ -1469,7 +1766,6 @@
             } catch (error) {
                 console.error("Failed to load data:", error);
                 updateStatusIcon('error'); // Set to error state
-                // Optionally, display a more user-friendly error message
                 renderDevices([{ name: "Greška pri učitavanju podataka.", properties: {} }]);
             }
         }
@@ -1491,75 +1787,26 @@
                     mapTypeControl: false,
                     streetViewControl: false
                 });
+                if (!infoWindow) {
+                    infoWindow = new google.maps.InfoWindow();
+                }
+                infoWindow.addListener('closeclick', function () {
+                    deselectDevice();
+                });
                 renderMap(window.devicesData || [], selectedDeviceIndex);
             };
             document.body.appendChild(script);
         }
-        // Tabs logic
-        function showTab(tab) {
-            const isMobile = window.innerWidth <= 600;
-            const devicesPanel = document.getElementById('devices-panel');
-            const mapPanel = document.getElementById('map-panel');
-            const tabs = document.getElementById('tabs');
-            const filterPanel = document.getElementById('filter-panel'); // Desktop filter panel
-            const filterPanelMobile = document.getElementById('filter-panel-mobile'); // Mobile filter panel
+        // Tabs click listeners
+        document.getElementById('tab-filter').onclick = () => showTab('filter');
+        document.getElementById('tab-lista').onclick = () => showTab('lista');
+        document.getElementById('tab-karta').onclick = () => showTab('karta');
 
-            if (isMobile) {
-                tabs.style.display = 'flex';
-                if (tab === 'filter') {
-                    filterPanelMobile.style.display = ''; // Prikaz mobilnog filtera
-                    filterPanel.style.display = 'none'; // Sakrij desktop filter
-                    devicesPanel.style.display = 'none'; // Sakrij listu uređaja
-                    mapPanel.style.display = 'none'; // Sakrij kartu
-                    document.getElementById('tab-filter').classList.add('active');
-                    document.getElementById('tab-lista').classList.remove('active');
-                    document.getElementById('tab-karta').classList.remove('active');
-                } else if (tab === 'lista') {
-                    filterPanelMobile.style.display = 'none'; // Sakrij mobilni filter
-                    filterPanel.style.display = 'none'; // **KLJUČNA IZMJENA: Sakrij desktop filter**
-                    devicesPanel.style.display = ''; // Prikaz liste uređaja
-                    mapPanel.style.display = 'none'; // Sakrij kartu
-                    document.getElementById('tab-filter').classList.remove('active');
-                    document.getElementById('tab-lista').classList.add('active');
-                    document.getElementById('tab-karta').classList.remove('active');
-                    // Re-render devices to ensure selection is visible
-                    renderDevices(window.devicesData);
-                } else { // tab === 'karta'
-                    filterPanelMobile.style.display = 'none'; // Sakrij mobilni filter
-                    filterPanel.style.display = 'none'; // **KLJUČNA IZMJENA: Sakrij desktop filter**
-                    devicesPanel.style.display = 'none'; // Sakrij listu uređaja
-                    mapPanel.style.display = ''; // Prikaz karte
-                    document.getElementById('tab-filter').classList.remove('active');
-                    document.getElementById('tab-lista').classList.remove('active');
-                    document.getElementById('tab-karta').classList.add('active');
-                    // Re-render map to ensure selection is visible
-                    renderMap(window.devicesData, selectedDeviceIndex);
-                    // Also, if a device is selected, open its info window
-                    if (selectedDeviceIndex !== null && window.devicesData[selectedDeviceIndex]) {
-                        const p = window.devicesData[selectedDeviceIndex].properties || {};
-                        let locType = "start";
-                        if (p.currentLat && p.currentLon && p.startLat && p.startLon) {
-                            const dist = getDistanceInMeters(
-                                parseFloat(p.startLat), parseFloat(p.startLon),
-                                parseFloat(p.currentLat), parseFloat(p.currentLon)
-                            );
-                            if (dist > 7) locType = "current";
-                        }
-                        openInfoWindowForDevice(selectedDeviceIndex, locType);
-                    }
-                }
-            } else { // Desktop prikaz
-                tabs.style.display = 'none';
-                filterPanel.style.display = 'grid';
-                devicesPanel.style.display = 'flex';
-                mapPanel.style.display = 'flex';
-            }
-        }
         window.addEventListener('resize', () => {
-            showTab(window.innerWidth <= 600 ? (document.getElementById('tab-filter').classList.contains('active') ? 'filter' : (document.getElementById('tab-lista').classList.contains('active') ? 'lista' : 'karta')) : 'both');
+            showTab(); // Call without argument to let it figure out based on current state and width
         });
         document.getElementById('settingsBtn').onclick = showPopup;
-        document.getElementById('refreshBtn').onclick = loadAll; /* Dodan event listener za osvježavanje */
+        document.getElementById('refreshBtn').onclick = loadAll;
     </script>
 </body>
 </html>
