@@ -757,7 +757,7 @@
             }
 
             // Find the minimum (earliest) date
-            return new Date(Math.min.apply(null, validDates));
+            return new Date(Math.max.apply(null, validDates));
         }
 
 
