@@ -741,7 +741,15 @@
 
             const validDates = dates
                 .filter(d => d) // Filter out null, undefined, empty strings
-                .map(d => new Date(d)) // Convert to Date objects
+                .map(d => {
+                    // FIX: Ensure all date strings are parsed as UTC.
+                    // If a string looks like ISO format but is missing the 'Z' suffix,
+                    // JavaScript might parse it as local time. Appending 'Z' forces UTC parsing.
+                    if (typeof d === 'string' && d.includes('T') && !d.endsWith('Z')) {
+                        return new Date(d + 'Z');
+                    }
+                    return new Date(d); // Standard parsing for strings with 'Z' or other formats.
+                })
                 .filter(d => !isNaN(d.getTime())); // Filter out invalid dates
 
             if (validDates.length === 0) {
