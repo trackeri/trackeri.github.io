@@ -719,13 +719,13 @@
             });
         }
         
-        // --- NEW HELPER FUNCTION ---
+        // --- UPDATED HELPER FUNCTION ---
         /**
-         * Finds the earliest valid date from a list of properties in a device object.
+         * Finds the latest valid date from a list of properties in a device object.
          * @param {object} dev - The device object.
-         * @returns {Date|null} The earliest date object or null if no valid dates are found.
+         * @returns {Date|null} The latest date object or null if no valid dates are found.
          */
-        function getEarliestUpdateTime(dev) {
+        function getLatestUpdateTime(dev) {
             if (!dev) return null;
             const p = dev.properties || {};
             const dates = [
@@ -743,8 +743,6 @@
                 .filter(d => d) // Filter out null, undefined, empty strings
                 .map(d => {
                     // FIX: Ensure all date strings are parsed as UTC.
-                    // If a string looks like ISO format but is missing the 'Z' suffix,
-                    // JavaScript might parse it as local time. Appending 'Z' forces UTC parsing.
                     if (typeof d === 'string' && d.includes('T') && !d.endsWith('Z')) {
                         return new Date(d + 'Z');
                     }
@@ -756,7 +754,7 @@
                 return null;
             }
 
-            // Find the minimum (earliest) date
+            // Find the maximum (latest) date
             return new Date(Math.max.apply(null, validDates));
         }
 
@@ -832,10 +830,10 @@
                 }
                 // Ažuriranje - UPDATED LOGIC
                 if (filters.update) {
-                    const earliestUpdate = getEarliestUpdateTime(d);
-                    if (!earliestUpdate) return false;
+                    const latestUpdate = getLatestUpdateTime(d);
+                    if (!latestUpdate) return false;
                     const now = new Date();
-                    const agoMin = Math.floor((now - earliestUpdate) / 60000);
+                    const agoMin = Math.floor((now - latestUpdate) / 60000);
                     const num = parseInt(filters.update.replace(">", ""));
                     if (!(agoMin > num)) return false;
                 }
@@ -990,7 +988,7 @@
         // Dodaj globalni infoWindow za mapu
         let infoWindow = null;
         // Helpers
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
             function toRad(x) { return x * Math.PI / 180; }
             var R = 6371000; // Radius Zemlje u metrima
             var dLat = toRad(lat2 - lat1);
@@ -1001,11 +999,11 @@
             var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
-        function timeAgo(iso) {
-            if (!iso) return '';
-            const t = new Date(iso);
+        // --- UPDATED TIMEAGO FUNCTION ---
+        function timeAgo(dateObj) {
+            if (!dateObj) return '';
             const now = new Date();
-            const diff = Math.floor((now - t) / 60000);
+            const diff = Math.floor((now - dateObj) / 60000); // Razlika u minutama
             if (diff < 1) return 'prije par sekundi';
             if (diff === 1) return 'prije minutu';
             if (diff < 60) return `prije ${diff} min`;
@@ -1126,17 +1124,6 @@
                 map.setZoom(15);
             }
         }
-        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
-            function toRad(x) { return x * Math.PI / 180; }
-            var R = 6371000; // Radius Zemlje u metrima
-            var dLat = toRad(lat2 - lat1);
-            var dLon = toRad(lon2 - lon1);
-            var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
         // New function for distance color - returns direct color values
         function distanceColor(dist) {
             if (dist < 8) return '#43a047';       // Green (var(--success))
@@ -1172,7 +1159,7 @@
             return '<i class="fa-solid fa-wifi" style="color:#1976d2" title="IP"></i>';
         }
         function deviceDetailsHtml(dev, p) {
-            // Izračun udaljenosti i vremena ažuriranja - UPDATED LOGIC
+            // Izračun udaljenosti i vremena ažuriranja
             let dist = 0, agoMin = 0, agoRed = false;
             let distColorStyle = '';
             if (p.startLat && p.startLon && p.currentLat && p.currentLon) {
@@ -1180,12 +1167,12 @@
                     parseFloat(p.startLat), parseFloat(p.startLon),
                     parseFloat(p.currentLat), parseFloat(p.currentLon)
                 );
-                distColorStyle = `color:${distanceColor(dist)};`; /* Uklonjen font-weight:600 */
+                distColorStyle = `color:${distanceColor(dist)};`;
             }
-            const earliestUpdate = getEarliestUpdateTime(dev);
-            if (earliestUpdate) {
+            const latestUpdate = getLatestUpdateTime(dev);
+            if (latestUpdate) {
                 const now = new Date();
-                agoMin = Math.floor((now - earliestUpdate) / 60000);
+                agoMin = Math.floor((now - latestUpdate) / 60000);
                 agoRed = agoMin > 20;
             }
             return `
@@ -1212,7 +1199,7 @@
                                     <div class="last-update-info ${agoRed ? 'red' : ''}" style="margin-top: 0.5rem;">
                                         <div>
                                             <i class="fa-regular fa-clock" ${agoRed ? 'style="color:#e53935"' : ''}></i>
-                                            <span style="color:var(--muted);">Ažurirano:</span> <span style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'}">${earliestUpdate ? timeAgo(earliestUpdate) : 'N/A'}</span>
+                                            <span style="color:var(--muted);">Ažurirano:</span> <span style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'}">${latestUpdate ? timeAgo(latestUpdate) : 'N/A'}</span>
                                         </div>
                                         ${dist ? `<span style="${distColorStyle}">(${dist.toFixed(1)} m)</span>` : ''}
                                     </div>
@@ -1528,15 +1515,15 @@
                 let distMeters = 0;
                 let distColorStyle = '';
                 if (startLat && startLon && currentLat && currentLon) {
-                    distMeters = getDistanceFromLatLonInKm(startLat, startLon, currentLat, currentLon);
-                    // This line was changed:
-                    distColorStyle = `color:${distanceColor(distMeters)};`; /* Uklonjen font-weight:600 */
-                    distanceText = `<span style="${distColorStyle}">(${distMeters.toFixed(2)} m)</span>`;
+                    // --- BUG FIX: Call the correct function ---
+                    distMeters = getDistanceInMeters(startLat, startLon, currentLat, currentLon);
+                    distColorStyle = `color:${distanceColor(distMeters)};`;
+                    distanceText = `<span style="${distColorStyle}">(${distMeters.toFixed(1)} m)</span>`;
                 }
-                // Last update - UPDATED LOGIC
-                const earliestUpdate = getEarliestUpdateTime(dev);
-                const lastUpdate = earliestUpdate ? timeAgo(earliestUpdate) : '';
-                const agoMin = earliestUpdate ? Math.floor((new Date() - earliestUpdate) / 60000) : 0;
+                // Last update
+                const latestUpdate = getLatestUpdateTime(dev);
+                const lastUpdateText = latestUpdate ? timeAgo(latestUpdate) : 'Nema podataka';
+                const agoMin = latestUpdate ? Math.floor((new Date() - latestUpdate) / 60000) : 0;
                 const agoRed = agoMin > 20;
 
                 // Card
@@ -1580,7 +1567,7 @@
                                 <div class="last-update" style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'} margin-top:0.5rem;">
                                     <div>
                                         <i class="fa-regular fa-clock" ${agoRed ? 'style="color:#e53935"' : ''}></i>
-                                        <span style="color:var(--muted);">Ažurirano </span><span style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'}">${lastUpdate ? lastUpdate : 'Nema podataka'}</span>
+                                        <span style="color:var(--muted);">Ažurirano </span><span style="${agoRed ? 'color:#e53935;' : 'color:var(--text);'}">${lastUpdateText}</span>
                                     </div>
                                     ${distMeters ? distanceText : ''}
                                 </div>
